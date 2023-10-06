@@ -20,6 +20,11 @@ class BusService:
         data_to_sent = self._construct_sending_data(chat_id=chat_id, message=error_message)
         await self._send_text_message(data_to_sent)
 
+    async def send_city_not_found_message(self, chat_id: int) -> None:
+        error_message = f"Sorry but right now your city not added yet"
+        data_to_sent = self._construct_sending_data(chat_id=chat_id, message=error_message)
+        await self._send_text_message(data_to_sent)
+
     async def send_shops_not_found_message(self, chat_id: int, city_name: str) -> None:
         error_message = f"Sorry but can't find coffee shops from you city: {city_name}"
         data_to_sent = self._construct_sending_data(chat_id=chat_id, message=error_message)

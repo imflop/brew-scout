@@ -29,6 +29,7 @@ def pg_container():
     db_name = "postgres"
     username = "postgres"
     password = "password"
+
     def generate_container_name(x):
         return f"{x}-{uuid.uuid4().hex}"
 

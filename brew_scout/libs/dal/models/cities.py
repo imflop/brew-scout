@@ -30,6 +30,10 @@ class CityModel(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True
     )
+    bounding_box_min_latitude: Mapped[float]
+    bounding_box_max_latitude: Mapped[float]
+    bounding_box_min_longitude: Mapped[float]
+    bounding_box_max_longitude: Mapped[float]
 
     country: Mapped["CountryModel"] = relationship(back_populates="cities")
     shops: Mapped[list["CoffeeShopModel"]] = relationship(back_populates="city")

@@ -1,10 +1,11 @@
+import typing as t
 import orjson
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
-def orjson_dumps(v, *, default) -> str:
+def orjson_dumps(v: t.Any, *, default: t.Any) -> str:
     # orjson.dumps returns bytes, to match standard json.dumps we need to decode
     return orjson.dumps(v, default=default).decode()
 
