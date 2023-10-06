@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
 from ...libs.dependencies.common import on_async_session_factory
-from ...libs.dependencies.use_cases import telegram_hook_use_case_factory
+from ...libs.dependencies.handlers import telegram_hook_use_case_factory
 from ...libs.serializers.telegram import TelegramHookIn
 from ...libs.handlers.handle_telegram_hook import TelegramHookUseCase
 
