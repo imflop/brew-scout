@@ -15,8 +15,5 @@ def telegram_hook_use_case_factory(
     coffee_shop_service: CoffeeShopService = Depends(coffee_shop_service_factory),
 ) -> TelegramHookUseCase:
     return TelegramHookUseCase(
-        bus_service=bus_service,
-        geo_service=geo_service,
-        city_service=city_service,
-        shop_service=coffee_shop_service
+        bus_service=bus_service, geo_service=geo_service, city_service=city_service, shop_service=coffee_shop_service
     )

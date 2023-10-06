@@ -2,7 +2,7 @@ import dataclasses as dc
 import logging
 
 from ..domains.telegram import TelegramMessage
-from ..serializers.telegram import TelegramHookIn
+from ..serializers.telegram import TelegramHookIn, Location
 from ..serializers.telegram import Message
 from ..services.bus import BusService
 from ..services.geo import GeoService
@@ -23,18 +23,14 @@ class TelegramHookUseCase:
             self.logger.info(f"Start message from {payload.message.chat}")
             return await self.bus_service.send_welcome_message(payload.message.chat.id)
 
-        if not self._does_message_contain_location(payload.message):
+        if not (location := self._does_message_contain_location(payload.message)):
             self.logger.info(f"Message is not <START> and without locations {payload.message}")
             return await self.bus_service.send_empty_location_message(payload.message.chat.id)
 
         if not (
-            city := await self.city_service.try_to_find_city_from_coordinates(
-                payload.message.location.latitude, payload.message.location.longitude
-            )
+            city := await self.city_service.try_to_find_city_from_coordinates(location.latitude, location.longitude)
         ):
-            self.logger.info(
-                f"City is not found by: {payload.message.location.latitude} {payload.message.location.longitude}"
-            )
+            self.logger.info(f"City is not found by: {location.latitude} {location.longitude}")
             return await self.bus_service.send_city_not_found_message(payload.message.chat.id)
 
         if not (coffee_shops := await self.shop_service.get_coffee_shops_for_city(city.name)):
@@ -52,5 +48,5 @@ class TelegramHookUseCase:
                 return False
 
     @staticmethod
-    def _does_message_contain_location(msg: Message) -> bool:
-        return bool(msg.location)
+    def _does_message_contain_location(msg: Message) -> Location | None:
+        return msg.location if msg.location else None
