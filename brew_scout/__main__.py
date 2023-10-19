@@ -8,12 +8,12 @@ from .libs.setup_app import setup_app
 
 
 def init_args_parser() -> ArgumentParser:
-    parser = ArgumentParser()
-    parser.add_argument("--database_dsn", type=str)
-    parser.add_argument("--telegram_api_url", type=str)
-    parser.add_argument("--telegram_api_token", type=str)
+    arg_parser = ArgumentParser()
+    arg_parser.add_argument("--database_dsn", type=str)
+    arg_parser.add_argument("--telegram_api_url", type=str)
+    arg_parser.add_argument("--telegram_api_token", type=str)
 
-    return parser
+    return arg_parser
 
 
 def main(database_dsn: str, telegram_api_url: str, telegram_api_token: str) -> None:

@@ -11,7 +11,7 @@ from ..services.shop import CoffeeShopService
 
 
 @dc.dataclass(slots=True, repr=False)
-class TelegramHookUseCase:
+class TelegramHookHandler:
     bus_service: BusService
     geo_service: GeoService
     city_service: CityService

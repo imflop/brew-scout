@@ -12,8 +12,6 @@ from brew_scout import MODULE_NAME, DESCRIPTION, VERSION
 from .settings import AppSettings, SETTINGS_KEY
 from ..apis.v1.base import router as router_v1
 
-API_PREFIX = "/api/v1"
-
 
 def configure_db_session_factory(
     engine: AsyncEngine, factory: async_sessionmaker[AsyncSession]
