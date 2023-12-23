@@ -3,7 +3,7 @@ from fastapi import Depends
 from .clients import geo_client_factory, telegram_client_factory
 from .repositories import city_repository_factory, coffee_shop_repository_factory
 from ..clients.geo import GeoClient
-from ..clients.telegram import TelegramClinet
+from ..clients.telegram import TelegramClient
 from ..services.city import CityService
 from ..services.geo import GeoService
 from ..services.shop import CoffeeShopService
@@ -22,7 +22,7 @@ def coffee_shop_service_factory(
     return CoffeeShopService(coffee_shop_repository)
 
 
-def bus_service_factory(telegram_client: TelegramClinet = Depends(telegram_client_factory)) -> BusService:
+def bus_service_factory(telegram_client: TelegramClient = Depends(telegram_client_factory)) -> BusService:
     return BusService(telegram_client)
 
 

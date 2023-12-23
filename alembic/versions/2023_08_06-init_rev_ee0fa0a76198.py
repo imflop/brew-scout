@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ee0fa0a76198'
+revision = "ee0fa0a76198"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,19 +21,9 @@ def upgrade() -> None:
         "countries",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(256), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("timezone('UTC'::text, now())"),
-            nullable=False
-        ),
-        sa.Column(
-            "updated_at",
-            sa.DateTime(),
-            server_default=sa.text("timezone('UTC'::text, now())"),
-            nullable=False
-        ),
-        sa.PrimaryKeyConstraint("id")
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("timezone('UTC'::text, now())"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("timezone('UTC'::text, now())"), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     op.create_table(
@@ -41,20 +31,10 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("country_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(256), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("timezone('UTC'::text, now())"),
-            nullable=False
-        ),
-        sa.Column(
-            "updated_at",
-            sa.DateTime(),
-            server_default=sa.text("timezone('UTC'::text, now())"),
-            nullable=False
-        ),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("timezone('UTC'::text, now())"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("timezone('UTC'::text, now())"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.ForeignKeyConstraint(["country_id"], ["countries.id"])
+        sa.ForeignKeyConstraint(["country_id"], ["countries.id"]),
     )
 
     op.create_table(
@@ -65,20 +45,10 @@ def upgrade() -> None:
         sa.Column("web_url", sa.String(512), nullable=True),
         sa.Column("latitude", sa.Float(), nullable=False),
         sa.Column("longitude", sa.Float(), nullable=False),
-        sa.Column(
-            "created_at",
-            sa.DateTime(),
-            server_default=sa.text("timezone('UTC'::text, now())"),
-            nullable=False
-        ),
-        sa.Column(
-            "updated_at",
-            sa.DateTime(),
-            server_default=sa.text("timezone('UTC'::text, now())"),
-            nullable=False
-        ),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("timezone('UTC'::text, now())"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("timezone('UTC'::text, now())"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.ForeignKeyConstraint(["city_id"], ["cities.id"])
+        sa.ForeignKeyConstraint(["city_id"], ["cities.id"]),
     )
 
 

@@ -1,6 +1,9 @@
+import asyncio
 import dataclasses as dc
 import logging
+from collections import abc
 
+from ..dal.models.shops import CoffeeShopModel
 from ..domains.telegram import TelegramMessage
 from ..serializers.telegram import TelegramHookIn, Location
 from ..serializers.telegram import Message
@@ -16,6 +19,7 @@ class TelegramHookHandler:
     geo_service: GeoService
     city_service: CityService
     shop_service: CoffeeShopService
+
     logger: logging.Logger = dc.field(default_factory=lambda: logging.getLogger(__name__))
 
     async def process_hook(self, payload: TelegramHookIn) -> None:
@@ -36,8 +40,9 @@ class TelegramHookHandler:
         if not (coffee_shops := await self.shop_service.get_coffee_shops_for_city(city.name)):
             return await self.bus_service.send_shops_not_found_message(payload.message.chat.id, city.name)
 
-        nearest_coffee_shops = await self.geo_service.find_nearest_coffee_shops(coffee_shops)
-        await self.bus_service.send_nearest_coffee_shops_message(payload.message.chat.id, nearest_coffee_shops)
+        nearest_coffee_shops = await self.geo_service.find_nearest_coffee_shops(location, coffee_shops)
+        await self._send_message(payload.message.chat.id, nearest_coffee_shops)
+        self.logger.info("Nearest coffee shops sent")
 
     @staticmethod
     def _does_message_start_conversation(msg: Message) -> bool:
@@ -49,4 +54,12 @@ class TelegramHookHandler:
 
     @staticmethod
     def _does_message_contain_location(msg: Message) -> Location | None:
-        return msg.location if msg.location else None
+        return msg.location or None
+
+    async def _send_message(self, chat_id: int, coffee_shops: abc.Sequence[CoffeeShopModel]) -> None:
+        coros = (
+            self.bus_service.send_nearest_coffee_shops_message(chat_id, coffee_shop.name, coffee_shop.web_url)
+            for coffee_shop in coffee_shops
+        )
+
+        await asyncio.gather(*coros)

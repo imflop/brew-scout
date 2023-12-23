@@ -5,7 +5,6 @@ from collections import abc
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func
 
 from .models.cities import CityModel
 from ...vars import get_async_session
@@ -41,7 +40,7 @@ class CityRepository:
             & (CityModel.bounding_box_max_latitude >= latitude)
             & (CityModel.bounding_box_min_longitude <= longitude)
             & (CityModel.bounding_box_max_longitude >= longitude)
-        )
+        ).options(joinedload(CityModel.country))
 
         result = await self.db.scalars(q)
 

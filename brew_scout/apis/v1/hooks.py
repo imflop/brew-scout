@@ -11,6 +11,6 @@ router = APIRouter(tags=["Hooks"])
 
 @router.post("/hook/telegram", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(on_async_session_factory)])
 async def handle_hook(
-    hook_in: TelegramHookIn, use_case: TelegramHookHandler = Depends(telegram_hook_handler_factory)
+    hook_in: TelegramHookIn, handler: TelegramHookHandler = Depends(telegram_hook_handler_factory)
 ) -> None:
-    await use_case.process_hook(hook_in)
+    await handler.process_hook(hook_in)

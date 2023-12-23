@@ -3,8 +3,6 @@ import pytest
 from brew_scout.libs.dal.city import CityRepository
 from brew_scout.libs.domains.cities import City
 
-from ...factory_boys import CityFactory
-
 
 @pytest.fixture()
 def repository():

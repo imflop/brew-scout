@@ -11,7 +11,7 @@ class HttpMethods(StrEnum):
 
 
 @dc.dataclass(slots=True, repr=False)
-class TelegramClinet:
+class TelegramClient:
     api_url: str
     default_timeout: float = 35.0
     default_max_keepalive_connections: int = 5

@@ -69,6 +69,7 @@ def get_database_url() -> str:
     elif db_url := os.environ.get("DATABASE_URL"):
         return db_url
 
+
 async def run_async_migrations() -> None:
     """In this scenario we need to create an Engine
     and associate a connection with the context.
