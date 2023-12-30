@@ -12,6 +12,7 @@ def orjson_dumps(v: t.Any, *, default: t.Any) -> str:
 
 class TelegramMethods(StrEnum):
     SEND_MESSAGE = "sendMessage"
+    SEND_VENUE = "sendVenue"
 
 
 class TelegramMessage(StrEnum):

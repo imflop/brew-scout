@@ -1,10 +1,10 @@
 from fastapi import Depends
 
 from .services import bus_service_factory, geo_service_factory, coffee_shop_service_factory, city_service_factory
-from ..services.bus import BusService
+from ..services.bus.service import BusService
 from ..services.city import CityService
 from ..services.shop import CoffeeShopService
-from ..services.geo import GeoService
+from ..services.geo.service import GeoService
 from ..handlers.handle_telegram_hook import TelegramHookHandler
 
 

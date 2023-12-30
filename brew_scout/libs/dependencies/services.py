@@ -2,12 +2,12 @@ from fastapi import Depends
 
 from .clients import geo_client_factory, telegram_client_factory
 from .repositories import city_repository_factory, coffee_shop_repository_factory
-from ..clients.geo import GeoClient
-from ..clients.telegram import TelegramClient
+from ..services.geo.client import GeoClient
 from ..services.city import CityService
-from ..services.geo import GeoService
+from ..services.geo.service import GeoService
 from ..services.shop import CoffeeShopService
-from ..services.bus import BusService
+from ..services.bus.service import BusService
+from ..services.bus.client import TelegramClient
 from ..dal.city import CityRepository
 from ..dal.shop import CoffeeShopRepository
 

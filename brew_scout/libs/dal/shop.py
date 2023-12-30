@@ -29,7 +29,12 @@ class CoffeeShopRepository:
         return result.all()
 
     async def get_by_city_name(self, city_name: str) -> abc.Sequence[CoffeeShopModel]:
-        q = select(CoffeeShopModel).options(joinedload(CoffeeShopModel.city)).where(CityModel.name.ilike(city_name))
+        q = (
+            select(CoffeeShopModel)
+            .join(CoffeeShopModel.city)
+            .options(joinedload(CoffeeShopModel.city))
+            .where(CityModel.name.ilike(city_name))
+        )
 
         result = await self.db.scalars(q)
 

@@ -35,12 +35,17 @@ class CityRepository:
         return result.all()
 
     async def get_city_by_coordinates(self, latitude: float, longitude: float) -> CityModel | None:
-        q = select(CityModel).filter(
-            (CityModel.bounding_box_min_latitude <= latitude)
-            & (CityModel.bounding_box_max_latitude >= latitude)
-            & (CityModel.bounding_box_min_longitude <= longitude)
-            & (CityModel.bounding_box_max_longitude >= longitude)
-        ).options(joinedload(CityModel.country))
+        q = (
+            select(CityModel)
+            .join(CityModel.country)
+            .options(joinedload(CityModel.country))
+            .filter(
+                (CityModel.bounding_box_min_latitude <= latitude)
+                & (CityModel.bounding_box_max_latitude >= latitude)
+                & (CityModel.bounding_box_min_longitude <= longitude)
+                & (CityModel.bounding_box_max_longitude >= longitude)
+            )
+        )
 
         result = await self.db.scalars(q)
 

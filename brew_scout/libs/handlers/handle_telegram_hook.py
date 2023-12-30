@@ -7,8 +7,8 @@ from ..dal.models.shops import CoffeeShopModel
 from ..domains.telegram import TelegramMessage
 from ..serializers.telegram import TelegramHookIn, Location
 from ..serializers.telegram import Message
-from ..services.bus import BusService
-from ..services.geo import GeoService
+from ..services.bus.service import BusService
+from ..services.geo.service import GeoService
 from ..services.city import CityService
 from ..services.shop import CoffeeShopService
 
@@ -57,9 +57,15 @@ class TelegramHookHandler:
         return msg.location or None
 
     async def _send_message(self, chat_id: int, coffee_shops: abc.Sequence[CoffeeShopModel]) -> None:
-        coros = (
-            self.bus_service.send_nearest_coffee_shops_message(chat_id, coffee_shop.name, coffee_shop.web_url)
-            for coffee_shop in coffee_shops
+        await asyncio.gather(
+            *(
+                self.bus_service.send_nearest_coffee_shops_message(
+                    chat_id=chat_id,
+                    coffee_shop_latitude=coffee_shop.latitude,
+                    coffee_shop_longitude=coffee_shop.longitude,
+                    coffee_shop_name=coffee_shop.name,
+                    coffee_shop_url=coffee_shop.web_url,
+                )
+                for coffee_shop in coffee_shops
+            )
         )
-
-        await asyncio.gather(*coros)

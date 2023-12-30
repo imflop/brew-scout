@@ -1,4 +1,7 @@
 import typing as t
+from collections import abc
+
+from aiohttp import ClientSession
 from fastapi import Request
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +12,10 @@ from ..settings import AppSettings, SETTINGS_KEY
 
 def settings_factory(request: Request) -> AppSettings:
     return request.app.extra[SETTINGS_KEY]
+
+
+def client_session_factory(request: Request) -> abc.Callable[..., ClientSession]:
+    return request.app.state.client_session_getter
 
 
 async def on_async_session_factory(request: Request) -> t.AsyncIterator[AsyncSession]:
