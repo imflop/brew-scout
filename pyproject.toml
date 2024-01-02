@@ -20,6 +20,7 @@ toml = "^0.10.2"
 types-toml = "^0.10.8.6"
 geopy = "^2.3.0"
 aiohttp = {extras = ["speedups"], version = "^3.9.1"}
+tenacity = "^8.2.3"
 
 
 [tool.poetry.group.dev.dependencies]
