@@ -8,6 +8,8 @@ from ..services.geo.service import GeoService
 from ..services.shop import CoffeeShopService
 from ..services.bus.service import BusService
 from ..services.bus.client import TelegramClient
+from ..services.runner.retry import RetryService
+from ..services.runner.service import CommonRunnerService
 from ..dal.city import CityRepository
 from ..dal.shop import CoffeeShopRepository
 
@@ -22,8 +24,19 @@ def coffee_shop_service_factory(
     return CoffeeShopService(coffee_shop_repository)
 
 
-def bus_service_factory(telegram_client: TelegramClient = Depends(telegram_client_factory)) -> BusService:
-    return BusService(telegram_client)
+def retry_service_factory() -> RetryService:
+    return RetryService()
+
+
+def common_runner_service_factory(retry_service: RetryService = Depends(retry_service_factory)) -> CommonRunnerService:
+    return CommonRunnerService(retry_service)
+
+
+def bus_service_factory(
+    telegram_client: TelegramClient = Depends(telegram_client_factory),
+    common_runner_service: CommonRunnerService = Depends(common_runner_service_factory)
+) -> BusService:
+    return BusService(telegram_client, common_runner_service)
 
 
 def geo_service_factory(geo_client: GeoClient = Depends(geo_client_factory)) -> GeoService:

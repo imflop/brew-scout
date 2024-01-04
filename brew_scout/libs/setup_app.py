@@ -1,5 +1,6 @@
 from collections import abc
 from contextlib import asynccontextmanager
+import typing as t
 
 import asyncio
 from functools import partial
@@ -14,6 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from brew_scout import MODULE_NAME, DESCRIPTION, VERSION
 from .settings import AppSettings, SETTINGS_KEY
 from ..apis.v1.base import router as router_v1
+
+P = t.ParamSpec("P")
 
 
 def setup_app(settings: AppSettings) -> FastAPI:
@@ -59,7 +62,7 @@ def configure_db_session_factory(
     return factory
 
 
-def session_getter(loop: asyncio.AbstractEventLoop) -> aiohttp.ClientSession:
+def session_getter(loop: asyncio.AbstractEventLoop, *args: P.args, **kwargs: P.kwargs) -> aiohttp.ClientSession:
     return aiohttp.ClientSession(loop=loop)
 
 

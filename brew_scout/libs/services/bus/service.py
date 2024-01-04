@@ -1,14 +1,17 @@
 import dataclasses as dc
 import typing as t
 from collections import abc
+from functools import partial
 
 from .client import TelegramClient
+from ..runner.service import CommonRunnerService
 from ...domains.telegram import TelegramMethods, Button, Keyboard
 
 
 @dc.dataclass(frozen=True, repr=False, slots=True)
 class BusService:
     telegram_client: TelegramClient
+    runner_service: CommonRunnerService
 
     async def send_welcome_message(self, chat_id: int) -> None:
         welcome_message = "Hello there, send me your location"
@@ -49,10 +52,12 @@ class BusService:
         await self._send_venue_message(data_to_sent)
 
     async def _send_text_message(self, sending_data: abc.Mapping[str, t.Any]) -> None:
-        await self._send_message(TelegramMethods.SEND_MESSAGE, sending_data)
+        run_me = partial(self._send_message, telegram_method=TelegramMethods.SEND_MESSAGE, data=sending_data)
+        await self.runner_service.run_with_retry(run_me)
 
     async def _send_venue_message(self, sending_data: abc.Mapping[str, t.Any]) -> None:
-        await self._send_message(TelegramMethods.SEND_VENUE, sending_data)
+        run_me = partial(self._send_message, telegram_method=TelegramMethods.SEND_VENUE, data=sending_data)
+        await self.runner_service.run_with_retry(run_me)
 
     async def _send_message(self, telegram_method: TelegramMethods, data: abc.Mapping[str, t.Any]) -> None:
         async with self.telegram_client as client:

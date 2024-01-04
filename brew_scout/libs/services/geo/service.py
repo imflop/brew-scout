@@ -8,11 +8,11 @@ from ...serializers.geo import NominatimResponse
 from ...serializers.telegram import Location
 
 
-@dc.dataclass(frozen=True, slots=True, repr=False)
+@dc.dataclass(frozen=True, slots=True)
 class GeoService:
     client: GeoClient
-    default_language: t.ClassVar[str] = "en"
-    default_coffe_shops_count: t.ClassVar[int] = 3
+    default_language: str = "en"
+    default_coffe_shops_count: int = 3
 
     async def find_city_from_coordinates(self, latitude: float, longitude: float) -> abc.Sequence[float]:
         raw_result = await self._request(latitude, longitude)
