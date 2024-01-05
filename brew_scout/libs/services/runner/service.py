@@ -6,8 +6,6 @@ from .retry import RetryService
 
 
 T = t.TypeVar("T")
-F = t.TypeVar("F", bound=abc.Callable[..., abc.Awaitable[t.Any]])
-P = t.ParamSpec("P")
 
 
 @dc.dataclass(frozen=True, slots=True)
@@ -16,13 +14,11 @@ class CommonRunnerService:
 
     async def run_with_retry(
         self,
-        func: F,
+        func: abc.Callable[..., abc.Awaitable[T]],
         tries: int | None = None,
         pause: int | None = None,
         retry_exception: t.Any = Exception,
-        *args: P.args,
-        **kwargs: P.kwargs
+        *args: t.Any,
+        **kwargs: t.Any
     ) -> T:
-        return await self.retry_service.run_with_retry(
-            func=func, tries=tries, pause=pause, retry_exception=retry_exception, *args, **kwargs
-        )
+        return await self.retry_service.run_with_retry(func, tries, pause, retry_exception, *args, **kwargs)

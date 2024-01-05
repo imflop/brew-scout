@@ -12,7 +12,6 @@ from tenacity.retry import retry_base
 
 
 T = t.TypeVar("T")
-# F = t.TypeVar("F", bound=abc.Callable[..., abc.Awaitable[T]])
 P = t.ParamSpec("P")
 RetryErrorCallback = abc.Callable[[RetryCallState], t.Any]
 
@@ -41,7 +40,7 @@ class RetryService:
             pause = self.default_pause
 
         return await self._with_retry(
-            func=func,
+            func,
             wait=tenacity.wait_fixed(pause) if pause else tenacity.wait_none(),
             stop=tenacity.stop_after_attempt(tries) if tries else tenacity.stop_never,
             retry=self._get_retry_predicate(retry_exception),
@@ -49,7 +48,7 @@ class RetryService:
             retry_error_callback=retry_error_callback,
             *args,
             **kwargs,
-        )
+        )  # type: ignore
 
     async def _with_retry(
         self,
