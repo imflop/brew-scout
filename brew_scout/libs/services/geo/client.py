@@ -19,7 +19,7 @@ class GeoClient:
 
     @staticmethod
     def calculate_distance(from_coordinates: abc.Sequence[float], to_coordinates: abc.Sequence[float]) -> Distance:
-        return distance(from_coordinates, to_coordinates).kilometers
+        return distance(from_coordinates, to_coordinates)
 
     @staticmethod
     def _get_user_agent() -> str:

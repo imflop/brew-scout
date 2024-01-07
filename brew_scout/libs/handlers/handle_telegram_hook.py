@@ -56,7 +56,7 @@ class TelegramHookHandler:
     def _does_message_contain_location(msg: Message) -> Location | None:
         return msg.location or None
 
-    async def _send_message(self, chat_id: int, coffee_shops: abc.Sequence[CoffeeShopModel]) -> None:
+    async def _send_message(self, chat_id: int, coffee_shops: abc.Mapping[str, CoffeeShopModel]) -> None:
         await asyncio.gather(
             *(
                 self.bus_service.send_nearest_coffee_shops_message(
@@ -65,7 +65,8 @@ class TelegramHookHandler:
                     coffee_shop_longitude=coffee_shop.longitude,
                     coffee_shop_name=coffee_shop.name,
                     coffee_shop_url=coffee_shop.web_url,
+                    distance=distance,
                 )
-                for coffee_shop in coffee_shops
+                for distance, coffee_shop in coffee_shops.items()
             )
         )

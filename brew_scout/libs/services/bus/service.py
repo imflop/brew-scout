@@ -41,13 +41,15 @@ class BusService:
         coffee_shop_longitude: float,
         coffee_shop_name: str,
         coffee_shop_url: str,
+        distance: str,
     ) -> None:
         data_to_sent = self._make_venue_message_data(
             chat_id=chat_id,
             latitude=coffee_shop_latitude,
             longitude=coffee_shop_longitude,
-            title=coffee_shop_name,
+            name=coffee_shop_name,
             address=coffee_shop_url,
+            distance=distance,
         )
         await self._send_venue_message(data_to_sent)
 
@@ -76,12 +78,17 @@ class BusService:
 
     @staticmethod
     def _make_venue_message_data(
-        chat_id: int, latitude: float, longitude: float, title: str, address: str
+        chat_id: int, latitude: float, longitude: float, name: str, address: str, distance: str
     ) -> abc.Mapping[str, t.Any]:
+        if float(distance) < 1:
+            formatted_distance = f"(~ {str(round(float(distance) * 1000))} m away)"
+        else:
+            formatted_distance = f"(~ {distance} km away)"
+
         return {
             "chat_id": chat_id,
             "latitude": latitude,
             "longitude": longitude,
-            "title": title,
+            "title": f"{name} {formatted_distance}",
             "address": f"\n{address}",
         }
