@@ -1,36 +1,42 @@
-import dataclasses as dc
 import typing as t
+import uuid
 from collections import abc
 
-from sqlalchemy import select
+from sqlalchemy import select, BinaryExpression
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models.cities import CityModel
-from ...vars import get_async_session
+from .models.common import Base
 
 
 CityId: t.TypeAlias = int
+ModelIdFilter: t.TypeAlias = int | uuid.UUID
+Model = t.TypeVar("Model", bound=Base)
 
 
-@dc.dataclass(slots=True, repr=False)
-class CityRepository:
-    db: AsyncSession = dc.field(init=False)
+class BaseRepository(t.Generic[Model]):
+    def __init__(self, model: t.Type[Model], session: AsyncSession):
+        self.model = model
+        self.session = session
 
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "db", get_async_session())
+    async def get(self, id_filter: ModelIdFilter) -> Model | None:
+        return await self.session.get(self.model, id_filter)
 
-    async def get_one_or_none(self, city_id: CityId) -> CityModel | None:
-        q = select(CityModel).options(joinedload(CityModel.country)).where(CityModel.id == city_id)
+    async def filter(self, *expressions: BinaryExpression[t.Any]) -> abc.Sequence[Model]:
+        q = select(self.model)
 
-        result = await self.db.scalars(q)
+        if expressions:
+            q = q.where(*expressions)
 
-        return result.one_or_none()
+        return list(await self.session.scalars(q))
 
+
+class CityRepository(BaseRepository[CityModel]):
     async def get_all(self) -> abc.Sequence[CityModel]:
         q = select(CityModel).options(joinedload(CityModel.country))
 
-        result = await self.db.scalars(q)
+        result = await self.session.scalars(q)
 
         return result.all()
 
@@ -47,6 +53,6 @@ class CityRepository:
             )
         )
 
-        result = await self.db.scalars(q)
+        result = await self.session.scalars(q)
 
         return result.one_or_none()

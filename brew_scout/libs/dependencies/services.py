@@ -34,7 +34,7 @@ def common_runner_service_factory(retry_service: RetryService = Depends(retry_se
 
 def bus_service_factory(
     telegram_client: TelegramClient = Depends(telegram_client_factory),
-    common_runner_service: CommonRunnerService = Depends(common_runner_service_factory)
+    common_runner_service: CommonRunnerService = Depends(common_runner_service_factory),
 ) -> BusService:
     return BusService(telegram_client, common_runner_service)
 

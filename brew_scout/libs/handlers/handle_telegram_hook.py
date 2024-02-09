@@ -42,7 +42,7 @@ class TelegramHookHandler:
 
         nearest_coffee_shops = await self.geo_service.find_nearest_coffee_shops(location, coffee_shops)
         await self._send_message(payload.message.chat.id, nearest_coffee_shops)
-        self.logger.info("Nearest coffee shops sent")
+        # self.logger.info("Nearest coffee shops sent")
 
     @staticmethod
     def _does_message_start_conversation(msg: Message) -> bool:
@@ -56,8 +56,8 @@ class TelegramHookHandler:
     def _does_message_contain_location(msg: Message) -> Location | None:
         return msg.location or None
 
-    async def _send_message(self, chat_id: int, coffee_shops: abc.Mapping[str, CoffeeShopModel]) -> None:
-        await asyncio.gather(
+    async def _send_message(self, chat_id: int, coffee_shops: abc.Mapping[float, CoffeeShopModel]) -> None:
+        gathered_result = await asyncio.gather(
             *(
                 self.bus_service.send_nearest_coffee_shops_message(
                     chat_id=chat_id,
@@ -68,5 +68,11 @@ class TelegramHookHandler:
                     distance=distance,
                 )
                 for distance, coffee_shop in coffee_shops.items()
-            )
+            ),
+            return_exceptions=True,
         )
+
+        if errors := {
+            repr(result_or_error) for result_or_error in gathered_result if isinstance(result_or_error, Exception)
+        }:
+            self.logger.error("Errors occurred while sending nearest coffee shops messages", errors)

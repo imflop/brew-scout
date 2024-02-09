@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from brew_scout.vars import set_async_session
 from ..settings import AppSettings, SETTINGS_KEY
+from ..managers import db_manager
 
 
 T = t.TypeVar("T")
@@ -31,6 +32,11 @@ async def on_async_session_factory(request: Request) -> t.AsyncIterator[AsyncSes
         yield session
 
 
+async def get_db_session() -> t.AsyncGenerator[AsyncSession, None]:
+    async with db_manager.session() as session:
+        yield session
+
+
 async def background_runner_factory(request: Request, background_tasks: BackgroundTasks) -> BackgroundRunner:
     run_now = request.query_params.get("run_now", False)
 
@@ -40,7 +46,6 @@ async def background_runner_factory(request: Request, background_tasks: Backgrou
             return
 
         # Run the function in the background
-        background_tasks.add_task(func, *args, **kwargs)
-        return
+        return background_tasks.add_task(func, *args, **kwargs)
 
     return background_runner

@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from brew_scout import MODULE_NAME, DESCRIPTION, VERSION
 from .settings import AppSettings, SETTINGS_KEY
+from .managers import db_manager
 from ..apis.v1.base import router as router_v1
 
 P = t.ParamSpec("P")
@@ -24,12 +25,14 @@ def setup_app(settings: AppSettings) -> FastAPI:
     async def app_lifespan(app: FastAPI) -> abc.AsyncIterator[None]:
         engine = create_async_engine(settings.database_dsn, echo=settings.debug)
         app.state.async_session_factory = configure_db_session_factory(engine, async_sessionmaker())
-        app.state.client_session_getter = partial(session_getter, loop=asyncio.get_event_loop())
+        app.state.client_session_getter = partial(session_getter, loop=asyncio.get_running_loop())
+        db_manager.init(settings.database_dsn, settings.debug)
 
         try:
             yield
         finally:
             await engine.dispose()
+            await db_manager.close()
 
     middlewares = [
         Middleware(

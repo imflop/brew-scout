@@ -41,7 +41,7 @@ class BusService:
         coffee_shop_longitude: float,
         coffee_shop_name: str,
         coffee_shop_url: str,
-        distance: str,
+        distance: float,
     ) -> None:
         data_to_sent = self._make_venue_message_data(
             chat_id=chat_id,
@@ -62,8 +62,7 @@ class BusService:
         await self.runner_service.run_with_retry(run_me)
 
     async def _send_message(self, telegram_method: TelegramMethods, data: abc.Mapping[str, t.Any]) -> None:
-        async with self.telegram_client as client:
-            await client.post(telegram_method, data)
+        await self.telegram_client.post(telegram_method, data)
 
     @staticmethod
     def _make_text_message_data(
@@ -78,10 +77,10 @@ class BusService:
 
     @staticmethod
     def _make_venue_message_data(
-        chat_id: int, latitude: float, longitude: float, name: str, address: str, distance: str
+        chat_id: int, latitude: float, longitude: float, name: str, address: str, distance: float
     ) -> abc.Mapping[str, t.Any]:
-        if float(distance) < 1:
-            formatted_distance = f"(~ {str(round(float(distance) * 1000))} m away)"
+        if distance < 1.0:
+            formatted_distance = f"(~ {str(round(distance * 1000))} m away)"
         else:
             formatted_distance = f"(~ {distance} km away)"
 
@@ -89,6 +88,6 @@ class BusService:
             "chat_id": chat_id,
             "latitude": latitude,
             "longitude": longitude,
-            "title": f"{name} {formatted_distance}",
-            "address": f"\n{address}",
+            "title": f"{name}",
+            "address": f"\n{formatted_distance} {address}",
         }
