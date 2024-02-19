@@ -12,6 +12,7 @@ from ...serializers.telegram import Location
 class GeoService:
     client: GeoClient
     default_language: str = "en"
+    default_quantity_for_response: int = 3
 
     async def find_nearest_coffee_shops(
         self, source_location: Location, coffee_shops: abc.Sequence[CoffeeShopModel]
@@ -27,7 +28,7 @@ class GeoService:
 
         sorted_distances = sorted(coffee_shops_with_distance.keys())
 
-        return {k: coffee_shops_with_distance[k] for k in sorted_distances}
+        return {k: coffee_shops_with_distance[k] for k in sorted_distances[: self.default_quantity_for_response]}
 
     async def find_city_from_coordinates(self, latitude: float, longitude: float) -> abc.Sequence[float]:
         raw_result = await self._request(latitude, longitude)

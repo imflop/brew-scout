@@ -42,7 +42,7 @@ class TelegramHookHandler:
 
         nearest_coffee_shops = await self.geo_service.find_nearest_coffee_shops(location, coffee_shops)
         await self._send_message(payload.message.chat.id, nearest_coffee_shops)
-        # self.logger.info("Nearest coffee shops sent")
+        self.logger.info("Nearest coffee shops sent")
 
     @staticmethod
     def _does_message_start_conversation(msg: Message) -> bool:

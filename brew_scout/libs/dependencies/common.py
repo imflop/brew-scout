@@ -6,7 +6,6 @@ from fastapi import Request, BackgroundTasks
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from brew_scout.vars import set_async_session
 from ..settings import AppSettings, SETTINGS_KEY
 from ..managers import db_manager
 
@@ -22,14 +21,6 @@ def settings_factory(request: Request) -> AppSettings:
 
 def client_session_factory(request: Request) -> abc.Callable[..., ClientSession]:
     return request.app.state.client_session_getter
-
-
-async def on_async_session_factory(request: Request) -> t.AsyncIterator[AsyncSession]:
-    async_session_factory = request.app.state.async_session_factory
-
-    async with async_session_factory() as session:
-        set_async_session(session)
-        yield session
 
 
 async def get_db_session() -> t.AsyncGenerator[AsyncSession, None]:

@@ -80,9 +80,9 @@ class BusService:
         chat_id: int, latitude: float, longitude: float, name: str, address: str, distance: float
     ) -> abc.Mapping[str, t.Any]:
         if distance < 1.0:
-            formatted_distance = f"(~ {str(round(distance * 1000))} m away)"
+            formatted_distance = f"(~ {distance * 1000:.0f} m away)"
         else:
-            formatted_distance = f"(~ {distance} km away)"
+            formatted_distance = f"(~ {distance:.2f} km away)"
 
         return {
             "chat_id": chat_id,
