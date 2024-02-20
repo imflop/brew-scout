@@ -11,7 +11,7 @@ class DatabaseSessionManager:
     _session_factory: async_sessionmaker[AsyncSession] | None = dc.field(default=None)
 
     def init(self, database_dsn: str, debug: bool = False) -> None:
-        self._engine = create_async_engine(database_dsn, echo=debug)
+        self._engine = create_async_engine(database_dsn, pool_pre_ping=True, echo=debug)
         self._session_factory = async_sessionmaker(bind=self._engine, expire_on_commit=False)
 
     async def close(self) -> None:

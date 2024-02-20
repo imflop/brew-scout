@@ -10,6 +10,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from starlette.middleware import Middleware
+import sentry_sdk
+from sentry_sdk.integrations.starlette import StarletteIntegration
+from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 from brew_scout import MODULE_NAME, DESCRIPTION, VERSION
 from .settings import AppSettings, SETTINGS_KEY
@@ -39,6 +42,20 @@ def setup_app(settings: AppSettings) -> FastAPI:
             allow_headers=["*"],
         )
     ]
+
+    if not settings.debug:
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            enable_tracing=True,
+            integrations=[
+                StarletteIntegration(
+                    transaction_style="url"
+                ),
+                FastApiIntegration(
+                    transaction_style="url"
+                ),
+            ],
+        )
 
     app = FastAPI(
         title=MODULE_NAME,
