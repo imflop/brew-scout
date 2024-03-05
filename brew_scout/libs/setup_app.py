@@ -43,19 +43,18 @@ def setup_app(settings: AppSettings) -> FastAPI:
         )
     ]
 
-    if not settings.debug:
-        sentry_sdk.init(
-            dsn=settings.sentry_dsn,
-            enable_tracing=True,
-            integrations=[
-                StarletteIntegration(
-                    transaction_style="url"
-                ),
-                FastApiIntegration(
-                    transaction_style="url"
-                ),
-            ],
-        )
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        enable_tracing=True,
+        integrations=[
+            StarletteIntegration(
+                transaction_style="url"
+            ),
+            FastApiIntegration(
+                transaction_style="url"
+            ),
+        ],
+    )
 
     app = FastAPI(
         title=MODULE_NAME,

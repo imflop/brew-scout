@@ -26,10 +26,21 @@ class TelegramBaseModel(BaseModel):
 
 class Button(TelegramBaseModel):
     text: str
+
+
+class ReplyKeyboardButton(Button):
     request_location: bool = Field(default=False)
 
 
-class Keyboard(TelegramBaseModel):
-    keyboard: list[list[Button]]
+class ReplyKeyboard(TelegramBaseModel):
+    keyboard: list[list[ReplyKeyboardButton]]
     one_time_keyboard: bool = Field(default=True)
     resize_keyboard: bool = Field(default=True)
+
+
+class InlineKeyboardButton(Button):
+    url: str
+
+
+class InlineKeyboard(TelegramBaseModel):
+    inline_keyboard: list[list[InlineKeyboardButton]]
