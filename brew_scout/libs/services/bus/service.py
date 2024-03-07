@@ -5,7 +5,7 @@ from functools import partial
 
 from .client import TelegramClient
 from ..runner.service import CommonRunnerService
-from ...domains.telegram import TelegramMethods, Button, ReplyKeyboard, InlineKeyboard, InlineKeyboardButton
+from ...domains.telegram import TelegramMethods, ReplyKeyboard, InlineKeyboard
 
 
 @dc.dataclass(frozen=True, repr=False, slots=True)
@@ -15,7 +15,9 @@ class BusService:
 
     async def send_welcome_message(self, chat_id: int) -> None:
         welcome_message = "Hi there, send me your location and I will try to find some coffee shops in your area."
-        data_to_sent = self._make_text_message_data(chat_id=chat_id, message=welcome_message, is_request_location=keyboard)
+        data_to_sent = self._make_text_message_data(
+            chat_id=chat_id, message=welcome_message, is_request_location=True
+        )
         await self._send_text_message(data_to_sent)
 
     async def send_empty_location_message(self, chat_id: int) -> None:
@@ -88,9 +90,7 @@ class BusService:
         else:
             formatted_distance = f"~ {distance:.2f} km away"
 
-        keyboard = InlineKeyboard(
-            **{"inline_keyboard": [[{"text": "🌐 / 📷 Link", "url": url}]]}
-        )
+        keyboard = InlineKeyboard(**{"inline_keyboard": [[{"text": "🌐 / 📷 Link", "url": url}]]})
 
         return {
             "chat_id": chat_id,
@@ -98,5 +98,5 @@ class BusService:
             "longitude": longitude,
             "title": name,
             "address": formatted_distance,
-            "reply_markup": keyboard.json()
+            "reply_markup": keyboard.json(),
         }

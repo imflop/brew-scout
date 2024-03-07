@@ -1,6 +1,10 @@
+import json
 from collections import abc
 from contextlib import asynccontextmanager
 import typing as t
+from pathlib import Path
+import logging.config
+
 
 import asyncio
 from functools import partial
@@ -27,6 +31,7 @@ def setup_app(settings: AppSettings) -> FastAPI:
     async def app_lifespan(app: FastAPI) -> abc.AsyncIterator[None]:
         app.state.client_session_getter = partial(session_getter, loop=asyncio.get_running_loop())
         db_manager.init(settings.database_dsn, settings.debug)
+        setup_logging()
 
         try:
             yield
@@ -43,18 +48,15 @@ def setup_app(settings: AppSettings) -> FastAPI:
         )
     ]
 
-    sentry_sdk.init(
-        dsn=settings.sentry_dsn,
-        enable_tracing=True,
-        integrations=[
-            StarletteIntegration(
-                transaction_style="url"
-            ),
-            FastApiIntegration(
-                transaction_style="url"
-            ),
-        ],
-    )
+    if settings.sentry_dsn:
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn,
+            enable_tracing=True,
+            integrations=[
+                StarletteIntegration(transaction_style="url"),
+                FastApiIntegration(transaction_style="url"),
+            ],
+        )
 
     app = FastAPI(
         title=MODULE_NAME,
@@ -76,3 +78,24 @@ def session_getter(loop: asyncio.AbstractEventLoop, *args: P.args, **kwargs: P.k
 
 def add_origins() -> abc.Sequence[str]:
     return "http://localhost:9090", "http://0.0.0.0:9090"
+
+
+def setup_logging():
+    current_path = Path(__file__)
+    config_file = None
+
+    for parent_directory in current_path.parents:
+        if (parent_directory / "log_cfg.json").is_file():
+            config_file = parent_directory / "log_cfg.json"
+
+    if config_file:
+        with open(config_file) as cfg_file:
+            config = json.load(cfg_file)
+
+        logging.config.dictConfig(config)
+
+        for _log in ["uvicorn", "uvicorn.error", "uvicorn.access", "sqlalchemy.engine.Engine"]:
+            # Clear the log handlers for uvicorn loggers, and enable propagation
+            # so the messages are caught by our root logger and formatted as we want
+            logging.getLogger(_log).handlers.clear()
+            logging.getLogger(_log).propagate = True

@@ -6,9 +6,9 @@ from pathlib import Path
 
 @cache
 def _project_root() -> Path | None:
-    current_file = Path(__file__)
+    current_path = Path(__file__)
 
-    for parent_directory in current_file.parents:
+    for parent_directory in current_path.parents:
         if (parent_directory / "pyproject.toml").is_file():
             return parent_directory
 
