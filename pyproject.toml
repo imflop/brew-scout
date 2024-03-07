@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "brew-scout"
-version = "1.3.4"
+version = "1.3.5"
 description = "Your guide to exceptional coffee, just around the corner."
 authors = ["fl"]
 license = "MIT"
