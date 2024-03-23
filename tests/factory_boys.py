@@ -48,8 +48,8 @@ class CoffeeShopFactory(BaseFactory):
     name = f.Faker("pystr")
     web_url = f.Faker("url")
     city_id = f.Faker("pyint")
-    latitude = f.Faker("pyfloat")
-    longitude = f.Faker("pyfloat")
+    latitude = f.Faker("pyfloat", min_value=-85.05112878, max_value=85.05112878)
+    longitude = f.Faker("pyfloat", min_value=-180, max_value=180)
     created_at = f.LazyFunction(datetime.utcnow)
     updated_at = f.LazyFunction(datetime.utcnow)
 

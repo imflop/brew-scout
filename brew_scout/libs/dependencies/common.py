@@ -5,9 +5,10 @@ from aiohttp import ClientSession
 from fastapi import Request, BackgroundTasks
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from redis.asyncio.client import Redis
 
 from ..settings import AppSettings, SETTINGS_KEY
-from ..managers import db_manager
+from ..managers import db_manager, rds_manager
 
 
 T = t.TypeVar("T")
@@ -26,6 +27,10 @@ def client_session_factory(request: Request) -> abc.Callable[..., ClientSession]
 async def get_db_session() -> t.AsyncGenerator[AsyncSession, None]:
     async with db_manager.session() as session:
         yield session
+
+
+async def get_rds_session() -> abc.AsyncGenerator[Redis, None]:
+    yield rds_manager.session()
 
 
 async def background_runner_factory(request: Request, background_tasks: BackgroundTasks) -> BackgroundRunner:

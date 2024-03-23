@@ -21,7 +21,7 @@ class TelegramClient:
 
     default_timeout: float = 35.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(
             self,
             "_session",

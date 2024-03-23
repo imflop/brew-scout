@@ -20,7 +20,7 @@ from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 from brew_scout import MODULE_NAME, DESCRIPTION, VERSION
 from .settings import AppSettings, SETTINGS_KEY
-from .managers import db_manager
+from .managers import db_manager, rds_manager
 from ..apis.v1.base import router as router_v1
 
 P = t.ParamSpec("P")
@@ -31,12 +31,14 @@ def setup_app(settings: AppSettings) -> FastAPI:
     async def app_lifespan(app: FastAPI) -> abc.AsyncIterator[None]:
         app.state.client_session_getter = partial(session_getter, loop=asyncio.get_running_loop())
         db_manager.init(settings.database_dsn, settings.debug)
+        rds_manager.init(settings.redis_dsn)
         setup_logging()
 
         try:
             yield
         finally:
             await db_manager.close()
+            await rds_manager.close()
 
     middlewares = [
         Middleware(
@@ -80,7 +82,7 @@ def add_origins() -> abc.Sequence[str]:
     return "http://localhost:9090", "http://0.0.0.0:9090"
 
 
-def setup_logging():
+def setup_logging() -> None:
     current_path = Path(__file__)
     config_file = None
 

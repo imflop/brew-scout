@@ -5,6 +5,7 @@ from collections import abc
 from .client import GeoClient
 from ...dal.models.shops import CoffeeShopModel
 from ...serializers.geo import NominatimResponse
+from ...serializers.shops import CoffeeShopOut
 from ...serializers.telegram import Location
 
 
@@ -15,8 +16,8 @@ class GeoService:
     default_quantity_for_response: int = 3
 
     async def find_nearest_coffee_shops(
-        self, source_location: Location, coffee_shops: abc.Sequence[CoffeeShopModel]
-    ) -> abc.Mapping[float, CoffeeShopModel]:
+        self, source_location: Location, coffee_shops: abc.Sequence[CoffeeShopOut]
+    ) -> abc.Sequence[CoffeeShopOut]:
         coffee_shops_with_distance = {}
 
         for cs in coffee_shops:
@@ -24,11 +25,17 @@ class GeoService:
                 (source_location.latitude, source_location.longitude), (cs.latitude, cs.longitude)
             )
 
-            coffee_shops_with_distance[float(distance.kilometers)] = cs
+            coffee_shops_with_distance[float(distance.kilometers)] = cs.dict()
 
         sorted_distances = sorted(coffee_shops_with_distance.keys())
+        result = []
 
-        return {k: coffee_shops_with_distance[k] for k in sorted_distances[: self.default_quantity_for_response]}
+        for k in sorted_distances[: self.default_quantity_for_response]:
+            cs = coffee_shops_with_distance[k]
+            cs["distance"] = k
+            result.append(cs)
+
+        return [CoffeeShopOut(**data) for data in result]
 
     async def find_city_from_coordinates(self, latitude: float, longitude: float) -> abc.Sequence[float]:
         raw_result = await self._request(latitude, longitude)

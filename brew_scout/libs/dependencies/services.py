@@ -1,10 +1,14 @@
 from fastapi import Depends
 
+from redis.asyncio.client import Redis
+
+from .common import get_rds_session
 from .clients import geo_client_factory, telegram_client_factory
 from .repositories import city_repository_factory, coffee_shop_repository_factory
 from ..services.geo.client import GeoClient
 from ..services.city import CityService
 from ..services.geo.service import GeoService
+from ..services.kv import KVService
 from ..services.shop import CoffeeShopService
 from ..services.bus.service import BusService
 from ..services.bus.client import TelegramClient
@@ -41,3 +45,7 @@ def bus_service_factory(
 
 def geo_service_factory(geo_client: GeoClient = Depends(geo_client_factory)) -> GeoService:
     return GeoService(geo_client)
+
+
+def kv_service_factory(client: Redis = Depends(get_rds_session)) -> KVService:
+    return KVService(client)

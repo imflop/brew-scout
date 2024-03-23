@@ -1,6 +1,8 @@
 import datetime as dt
 import json
 import logging
+import typing as t
+from collections import abc
 
 LOG_RECORD_BUILTIN_ATTRS = {
     "args",
@@ -38,7 +40,7 @@ class JSONFormatter(logging.Formatter):
         message = self._prepare_log_dict(record)
         return json.dumps(message, default=str)
 
-    def _prepare_log_dict(self, record: logging.LogRecord):
+    def _prepare_log_dict(self, record: logging.LogRecord) -> abc.Mapping[str, t.Any]:
         always_fields = {
             "message": record.getMessage(),
             "timestamp": dt.datetime.fromtimestamp(record.created, tz=dt.timezone.utc).isoformat(),

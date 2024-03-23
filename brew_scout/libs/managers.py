@@ -2,7 +2,26 @@ import dataclasses as dc
 from collections import abc
 from contextlib import asynccontextmanager
 
+from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, AsyncConnection, async_sessionmaker, create_async_engine
+
+
+@dc.dataclass(slots=True)
+class RedisSessionManager:
+    _client: Redis | None = dc.field(default=None)
+
+    def init(self, redis_dsn: str) -> None:
+        self._client = Redis.from_url(redis_dsn, encoding="utf-8", decode_responses=True)
+
+    async def close(self) -> None:
+        await self._client.aclose()
+
+    @asynccontextmanager
+    async def session(self) -> abc.AsyncIterator[Redis]:
+        if self._client is None:
+            raise IOError("Redis client is not initialized")
+
+        yield self._client
 
 
 @dc.dataclass(slots=True)
@@ -46,4 +65,5 @@ class DatabaseSessionManager:
                 raise
 
 
+rds_manager = RedisSessionManager()
 db_manager = DatabaseSessionManager()

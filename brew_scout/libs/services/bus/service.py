@@ -15,9 +15,7 @@ class BusService:
 
     async def send_welcome_message(self, chat_id: int) -> None:
         welcome_message = "Hi there, send me your location and I will try to find some coffee shops in your area."
-        data_to_sent = self._make_text_message_data(
-            chat_id=chat_id, message=welcome_message, is_request_location=True
-        )
+        data_to_sent = self._make_text_message_data(chat_id=chat_id, message=welcome_message, is_request_location=True)
         await self._send_text_message(data_to_sent)
 
     async def send_empty_location_message(self, chat_id: int) -> None:
