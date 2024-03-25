@@ -3,19 +3,19 @@ from collections import abc
 from pydantic import BaseModel
 
 
-class Address(BaseModel):
+class AddressIn(BaseModel):
     city: str | None
     country: str
     country_code: str
     municipality: str | None
 
 
-class NominatimResponse(BaseModel):
+class NominatimResponseIn(BaseModel):
     place_id: int
     osm_type: str
     osm_id: int
     lat: float
     lon: float
     display_name: str
-    address: Address
+    address: AddressIn
     boundingbox: abc.Sequence[float]

@@ -1,18 +1,14 @@
-from pydantic import BaseModel, AnyHttpUrl, Field
+from pydantic import BaseModel, AnyHttpUrl
 
 from .cities import CityOut
 
 
-class CoffeeShopOut(BaseModel):
+class CoffeeShopsOut(BaseModel):
+    id: int
     name: str
     latitude: float
     longitude: float
     web_url: AnyHttpUrl
-    distance: float = Field(default=0.0)
-
-
-class CoffeeShopsOut(CoffeeShopOut):
-    id: int
     city: CityOut
 
     class Config:

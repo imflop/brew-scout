@@ -1,17 +1,22 @@
 import dataclasses as dc
 import typing as t
+import logging
 from collections import abc
 from functools import partial
 
 from .client import TelegramClient
 from ..runner.service import CommonRunnerService
-from ...domains.telegram import TelegramMethods, ReplyKeyboard, InlineKeyboard
+from ...domains.shops import CoffeeShop
+from ...domains.telegram import TelegramMethods
+from ...serializers.telegram import ReplyKeyboardOut, InlineKeyboardOut
 
 
 @dc.dataclass(frozen=True, repr=False, slots=True)
 class BusService:
     telegram_client: TelegramClient
     runner_service: CommonRunnerService
+
+    logger: logging.Logger = dc.field(default_factory=lambda: logging.getLogger(__name__))
 
     async def send_welcome_message(self, chat_id: int) -> None:
         welcome_message = "Hi there, send me your location and I will try to find some coffee shops in your area."
@@ -36,19 +41,22 @@ class BusService:
     async def send_nearest_coffee_shops_message(
         self,
         chat_id: int,
-        coffee_shop_latitude: float,
-        coffee_shop_longitude: float,
-        coffee_shop_name: str,
-        coffee_shop_url: str,
-        distance: float,
+        coffee_shop: CoffeeShop,
     ) -> None:
+        if coffee_shop.distance is None:
+            self.logger.error(
+                "The coffee shop will not be sent because the distance has not been calculated",
+                extra={"chat_id": chat_id, "coffee_shop_name": coffee_shop.name},
+            )
+            return
+
         data_to_sent = self._make_venue_message_data(
             chat_id=chat_id,
-            latitude=coffee_shop_latitude,
-            longitude=coffee_shop_longitude,
-            name=coffee_shop_name,
-            url=coffee_shop_url,
-            distance=distance,
+            latitude=coffee_shop.latitude,
+            longitude=coffee_shop.longitude,
+            name=coffee_shop.name,
+            url=coffee_shop.web_url,
+            distance=coffee_shop.distance,
         )
         await self._send_venue_message(data_to_sent)
 
@@ -74,7 +82,7 @@ class BusService:
         }
 
         if is_request_location:
-            keyboard = ReplyKeyboard(**{"keyboard": [[{"text": "📍 Current location", "request_location": True}]]})
+            keyboard = ReplyKeyboardOut(**{"keyboard": [[{"text": "📍 Current location", "request_location": True}]]})
             result["reply_markup"] = keyboard.json()
 
         return result
@@ -88,7 +96,7 @@ class BusService:
         else:
             formatted_distance = f"~ {distance:.2f} km away"
 
-        keyboard = InlineKeyboard(**{"inline_keyboard": [[{"text": "🌐 / 📷 Link", "url": url}]]})
+        keyboard = InlineKeyboardOut(**{"inline_keyboard": [[{"text": "🌐 / 📷 Link", "url": url}]]})
 
         return {
             "chat_id": chat_id,

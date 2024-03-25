@@ -14,7 +14,7 @@ class RedisSessionManager:
         self._client = Redis.from_url(redis_dsn, encoding="utf-8", decode_responses=True)
 
     async def close(self) -> None:
-        await self._client.aclose()
+        await self._client.aclose()  # type: ignore
 
     @asynccontextmanager
     async def session(self) -> abc.AsyncIterator[Redis]:

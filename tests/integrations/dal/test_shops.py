@@ -1,13 +1,14 @@
 import pytest
 
 from brew_scout.libs.dal.shop import CoffeeShopRepository
+from brew_scout.libs.dal.models.shops import CoffeeShopModel
 
 from ...factory_boys import CountryFactory, CityFactory, CoffeeShopFactory
 
 
 @pytest.fixture()
-def repository():
-    return CoffeeShopRepository()
+def repository(db_session):
+    return CoffeeShopRepository(CoffeeShopModel, db_session)
 
 
 @pytest.mark.usefixtures("db_session")

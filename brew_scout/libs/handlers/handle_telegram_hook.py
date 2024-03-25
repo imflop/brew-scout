@@ -2,11 +2,9 @@ import asyncio
 import dataclasses as dc
 import logging
 from collections import abc
-import typing as t
 
-from ..dal.models.shops import CoffeeShopModel
 from ..domains.telegram import TelegramMessage
-from ..serializers.shops import CoffeeShopOut
+from ..domains.shops import CoffeeShop
 from ..serializers.telegram import TelegramHookIn, Location
 from ..serializers.telegram import Message
 from ..services.bus.service import BusService
@@ -24,6 +22,7 @@ class TelegramHookHandler:
     shop_service: CoffeeShopService
     kv_service: KVService
 
+    default_quantity_for_response: int = 2
     logger: logging.Logger = dc.field(default_factory=lambda: logging.getLogger(__name__))
 
     async def process_hook(self, payload: TelegramHookIn) -> None:
@@ -44,7 +43,7 @@ class TelegramHookHandler:
         if not (coffee_shops := await self._get_coffee_shops_for_city(city.name)):
             return await self.bus_service.send_shops_not_found_message(payload.message.chat.id, city.name)
 
-        nearest_coffee_shops = await self._find_nearest_coffee_shops(city.name, location, coffee_shops)
+        nearest_coffee_shops = await self._find_nearby_coffee_shops(city.name, location, coffee_shops)
         await self._send_message(payload.message.chat.id, nearest_coffee_shops)
         self.logger.info("Nearest coffee shops sent")
 
@@ -60,46 +59,44 @@ class TelegramHookHandler:
     def _does_message_contain_location(msg: Message) -> Location | None:
         return msg.location or None
 
-    async def _get_coffee_shops_for_city(self, city_name: str) -> t.Any:
+    async def _get_coffee_shops_for_city(self, city_name: str) -> abc.Sequence[CoffeeShop]:
         if coffee_shops_from_rds := await self.kv_service.get_coffee_shops(city_name):
-            self.logger.info(f"Return coffee shops from cache for {city_name}", extra={"city_name": city_name})
-
+            self.logger.info(f"Return coffee shops from cache for {city_name}", extra={"city": city_name})
             return coffee_shops_from_rds
 
         if coffee_shops_from_db := await self.shop_service.get_coffee_shops_for_city(city_name):
-            self.logger.info(f"Return coffee shops from db for {city_name}", extra={"city_name": city_name})
+            self.logger.info(f"Return coffee shops from db for {city_name}", extra={"city": city_name})
             await self.kv_service.set_coffee_shops(city_name, coffee_shops_from_db)
 
             return coffee_shops_from_db
 
-        return None
+        return []
 
-    async def _find_nearest_coffee_shops(
-        self, city_name: str, location: Location, coffee_shops: abc.Sequence[CoffeeShopOut]
-    ) -> abc.Sequence[CoffeeShopOut]:
+    async def _find_nearby_coffee_shops(
+        self, city_name: str, location: Location, coffee_shops: abc.Sequence[CoffeeShop]
+    ) -> abc.Sequence[CoffeeShop]:
         if nearest_coffee_shops_from_rds := await self.kv_service.get_nearest_coffee_shops(
             city_name=city_name,
             source_latitude=location.latitude,
             source_longitude=location.longitude,
         ):
-            return nearest_coffee_shops_from_rds
+            self.logger.info(f"Returning nearby coffee shops from cache for {city_name}", extra={"city": city_name})
+            return nearest_coffee_shops_from_rds[: self.default_quantity_for_response]
 
-        if nearest_coffee_shops_from_db := await self.geo_service.find_nearest_coffee_shops(location, coffee_shops):
-            return nearest_coffee_shops_from_db
+        if nearest_coffee_shops_from_db := await self.geo_service.find_nearest_coffee_shops(
+            source_latitude=location.latitude,
+            source_longitude=location.longitude,
+            coffee_shops=coffee_shops,
+        ):
+            self.logger.info(f"Returning nearby coffee shops from db for {city_name}", extra={"city": city_name})
+            return nearest_coffee_shops_from_db[: self.default_quantity_for_response]
 
         return []
 
-    async def _send_message(self, chat_id: int, coffee_shops: abc.Sequence[CoffeeShopOut]) -> None:
+    async def _send_message(self, chat_id: int, coffee_shops: abc.Sequence[CoffeeShop]) -> None:
         gathered_result = await asyncio.gather(
             *(
-                self.bus_service.send_nearest_coffee_shops_message(
-                    chat_id=chat_id,
-                    coffee_shop_latitude=coffee_shop.latitude,
-                    coffee_shop_longitude=coffee_shop.longitude,
-                    coffee_shop_name=coffee_shop.name,
-                    coffee_shop_url=coffee_shop.web_url,
-                    distance=coffee_shop.distance,
-                )
+                self.bus_service.send_nearest_coffee_shops_message(chat_id=chat_id, coffee_shop=coffee_shop)
                 for coffee_shop in coffee_shops
             ),
             return_exceptions=True,
