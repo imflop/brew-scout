@@ -71,8 +71,8 @@ class KVService:
             {
                 "name": name,
                 "distance": distance,
-                "latitude": coordinates[0],
-                "longitude": coordinates[1],
+                "latitude": coordinates[1],
+                "longitude": coordinates[0],
                 "web_url": web_url,
             }
             for key, distance, coordinates in result
