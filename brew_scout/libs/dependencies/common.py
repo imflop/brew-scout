@@ -30,7 +30,8 @@ async def get_db_session() -> t.AsyncGenerator[AsyncSession, None]:
 
 
 async def get_rds_session() -> abc.AsyncGenerator[Redis, None]:
-    yield rds_manager.session()
+    async with rds_manager.session() as redis_client:
+        yield redis_client
 
 
 async def background_runner_factory(request: Request, background_tasks: BackgroundTasks) -> BackgroundRunner:
