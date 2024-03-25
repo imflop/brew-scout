@@ -60,7 +60,7 @@ class KVService:
         return [
             {"name": name, "latitude": latitude, "longitude": longitude, "web_url": web_url}
             for member, score in result
-            for name, latitude, longitude, web_url in [member.split(":", 3)]
+            for name, longitude, latitude, web_url in [member.split(":", 3)]
         ]
 
     @staticmethod
