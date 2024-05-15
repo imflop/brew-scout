@@ -13,10 +13,10 @@ from tests.conftest import AsyncScopedSession
 
 
 @pytest.fixture()
-async def async_app(pg_conf):
+async def async_app(pg_conf, rds_conf):
     settings = AppSettings(
         database_dsn=f"postgresql+asyncpg://{pg_conf['user']}:{pg_conf['password']}@{pg_conf['host']}:{pg_conf['port']}/{pg_conf['db']}",
-        redis_dsn="redis://localhost:6379/0",
+        redis_dsn=f"{rds_conf['dsn']}",
         telegram_api_url="https://telegram.org",
         telegram_api_token="token",
     )
@@ -59,5 +59,7 @@ def db_session(app):
 
 @pytest.fixture()
 async def rds_session(app):
-    async with rds_manager.session() as redis_client:
+    mp = app.state.manager_provider
+
+    async with mp.redis_session_manager.session() as redis_client:
         yield redis_client

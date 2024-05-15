@@ -1,4 +1,3 @@
-import atexit
 import dataclasses as dc
 import json
 import typing as t
@@ -11,12 +10,13 @@ import yarl
 from aiohttp.typedefs import StrOrURL
 
 from brew_scout import MODULE_NAME, VERSION
+from brew_scout.libs.managers import ClientSessionManager
 
 
 @dc.dataclass(frozen=True, slots=True, repr=False)
 class TelegramClient:
     api_url: str
-    session_getter: abc.Callable[..., aiohttp.ClientSession]
+    client_session_manager: ClientSessionManager
     _session: aiohttp.ClientSession = dc.field(init=False)
 
     default_timeout: float = 35.0
@@ -25,14 +25,12 @@ class TelegramClient:
         object.__setattr__(
             self,
             "_session",
-            self.session_getter(
+            self.client_session_manager.get_session(
                 timeout=aiohttp.ClientTimeout(total=self.default_timeout),
                 headers=self._get_headers(),
                 trust_env=False,
             ),
         )
-
-        atexit.register(self.cleanup)
 
     async def cleanup(self) -> None:
         await self._session.close()

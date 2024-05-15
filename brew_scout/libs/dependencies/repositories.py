@@ -11,6 +11,7 @@ from ..dal.city import CityRepository, BaseRepository
 from ..dal.shop import CoffeeShopRepository
 from ..dependencies.common import get_db_session
 
+
 T = t.TypeVar("T", bound=BaseRepository[t.Any])
 
 
