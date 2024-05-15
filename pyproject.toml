@@ -57,7 +57,7 @@ strict_equality = true
 [tool.ruff]
 show-fixes = true
 exclude = [".venv"]
-line-length=120
+line-length = 120
 
 [tool.ruff.isort]
 lines-after-imports = 2

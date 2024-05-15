@@ -27,7 +27,7 @@ class RedisSessionManager:
         if self._client is None:
             return
 
-        await self._client.aclose()  # type: ignore
+        await self._client.aclose()
 
     @asynccontextmanager
     async def session(self) -> abc.AsyncIterator[Redis]:
@@ -90,6 +90,9 @@ class ClientSessionManager:
         self._session_factory = partial(self.session_getter, loop=loop)
 
     def get_session(self, **kwargs: t.Any) -> aiohttp.ClientSession:
+        if self._session_factory is None:
+            raise IOError("ClientSessionManager: session factory is not initialized")
+
         if self._client_session is None:
             self._client_session = self._session_factory(**kwargs)
             return self._client_session
