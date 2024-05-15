@@ -65,5 +65,5 @@ class JSONFormatter(logging.Formatter):
 
 
 class NonErrorFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
+    def filter(self, record: logging.LogRecord) -> bool:
         return record.levelno <= logging.INFO

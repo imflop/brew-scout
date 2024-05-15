@@ -14,7 +14,7 @@ from ..services.shop import CoffeeShopService
 from ..services.kv import KVService
 
 
-@dc.dataclass(slots=True, repr=False)
+@dc.dataclass(frozen=True, slots=True, repr=False)
 class TelegramHookHandler:
     bus_service: BusService
     geo_service: GeoService
@@ -31,7 +31,7 @@ class TelegramHookHandler:
             return await self.bus_service.send_welcome_message(payload.message.chat.id)
 
         if not (location := self._does_message_contain_location(payload.message)):
-            self.logger.info(f"Message is not <START> and without locations {payload.message}")
+            self.logger.info(f"Message is not <START> and without locations {payload.message.text}")
             return await self.bus_service.send_empty_location_message(payload.message.chat.id)
 
         if not (
@@ -41,6 +41,7 @@ class TelegramHookHandler:
             return await self.bus_service.send_city_not_found_message(payload.message.chat.id)
 
         if not (coffee_shops := await self._get_coffee_shops_for_city(city.name)):
+            self.logger.info(f"There are no coffee shops in city: {city.name}")
             return await self.bus_service.send_shops_not_found_message(payload.message.chat.id, city.name)
 
         nearest_coffee_shops = await self._find_nearby_coffee_shops(city.name, location, coffee_shops)

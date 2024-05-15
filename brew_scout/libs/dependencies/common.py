@@ -1,7 +1,7 @@
 import typing as t
 from collections import abc
 
-from aiohttp import ClientSession
+from fastapi import Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from redis.asyncio.client import Redis
@@ -9,7 +9,7 @@ from starlette.background import BackgroundTasks
 from starlette.requests import Request
 
 from ..settings import AppSettings, SETTINGS_KEY
-from ..managers import db_manager, rds_manager
+from ..managers import ManagerProvider
 
 
 T = t.TypeVar("T")
@@ -21,22 +21,25 @@ def settings_factory(request: Request) -> AppSettings:
     return request.app.extra[SETTINGS_KEY]
 
 
-def client_session_factory(request: Request) -> abc.Callable[..., ClientSession]:
-    return request.app.state.client_session_getter
+def manager_provider_factory(request: Request) -> ManagerProvider:
+    return request.app.state.manager_provider
 
 
-async def get_db_session() -> t.AsyncGenerator[AsyncSession, None]:
-    async with db_manager.session() as session:
+async def get_db_session(
+    manager_provider: ManagerProvider = Depends(manager_provider_factory),
+) -> t.AsyncGenerator[AsyncSession, None]:
+    async with manager_provider.database_session_manager.session() as session:
         yield session
 
 
-async def get_rds_session() -> abc.AsyncGenerator[Redis, None]:
-    async with rds_manager.session() as redis_client:
+async def get_rds_session(
+    manager_provider: ManagerProvider = Depends(manager_provider_factory),
+) -> abc.AsyncGenerator[Redis, None]:
+    async with manager_provider.redis_session_manager.session() as redis_client:
         yield redis_client
 
 
 async def background_runner_factory(request: Request, background_tasks: BackgroundTasks) -> BackgroundRunner:
-    _ = await request.json()
     run_now = bool(request.query_params.get("run_now", False))
 
     async def background_runner(func: abc.Callable[P, abc.Awaitable[T]], *args: P.args, **kwargs: P.kwargs) -> None:

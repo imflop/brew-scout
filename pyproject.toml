@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "brew-scout"
-version = "1.4.1"
+version = "1.4.2"
 description = "Your guide to exceptional coffee, just around the corner."
 authors = ["fl"]
 license = "MIT"
@@ -57,7 +57,7 @@ strict_equality = true
 [tool.ruff]
 show-fixes = true
 exclude = [".venv"]
-line-length=120
+line-length = 120
 
 [tool.ruff.isort]
 lines-after-imports = 2

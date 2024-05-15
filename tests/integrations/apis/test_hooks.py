@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 
+from brew_scout.libs.domains.cities import City
 from brew_scout.libs.domains.telegram import TelegramMethods
 from brew_scout.libs.services.bus.client import TelegramClient
 
@@ -84,6 +85,26 @@ async def test_handle_telegram_hook_if_start_message(client, caplog, start_paylo
     )
 
 
+async def test_handle_telegram_hook_if_not_start_message(client, caplog, start_payload):
+    start_payload["message"]["text"] = "doge"
+
+    with mock.patch.object(TelegramClient, "post", return_value=None) as mocked:
+        res = await client.post("/api/v1/hook/telegram?run_now=1", json=start_payload)
+
+    assert res.status_code == 204
+    assert [f'Message is not <START> and without locations {start_payload["message"]["text"]}'] == [
+        record.message for record in caplog.records if record.funcName == "process_hook"
+    ]
+    mocked.assert_called_once_with(
+        TelegramMethods.SEND_MESSAGE,
+        {
+            "chat_id": start_payload["message"]["chat"]["id"],
+            "text": "Sorry, but you need to share your location, use the button below for that message",
+            "parse_mode": "html",
+        },
+    )
+
+
 async def test_handle_telegram_hook_if_city_not_found(client, caplog, location_payload):
     with mock.patch.object(TelegramClient, "post", return_value=None) as mocked:
         res = await client.post("/api/v1/hook/telegram?run_now=1", json=location_payload)
@@ -102,6 +123,28 @@ async def test_handle_telegram_hook_if_city_not_found(client, caplog, location_p
         {
             "chat_id": location_payload["message"]["chat"]["id"],
             "text": "Sorry, your city has not been added yet.",
+            "parse_mode": "html",
+        },
+    )
+
+
+async def test_handle_telegram_hook_if_no_coffee_shops_in_city(client, caplog, location_payload):
+    tested_city = City.LONDON
+    location_payload["message"]["location"]["latitude"] = 51.50735721897955
+    location_payload["message"]["location"]["longitude"] = -0.09935182043450592
+
+    with mock.patch.object(TelegramClient, "post", return_value=None) as mocked:
+        res = await client.post("/api/v1/hook/telegram?run_now=1", json=location_payload)
+
+    assert res.status_code == 204
+    assert [f"There are no coffee shops in city: {tested_city}"] == [
+        record.message for record in caplog.records if record.funcName == "process_hook"
+    ]
+    mocked.assert_called_once_with(
+        TelegramMethods.SEND_MESSAGE,
+        {
+            "chat_id": location_payload["message"]["chat"]["id"],
+            "text": f"Sorry but can't find coffee shops from your city: {tested_city}",
             "parse_mode": "html",
         },
     )
