@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.orm.session import Session
 
-from brew_scout.libs.dal.models.cities import CountryModel, CityModel
+from brew_scout.libs.dal.models.shops import CountryModel, CityModel
 from brew_scout.libs.domains.cities import City
 
 # revision identifiers, used by Alembic.

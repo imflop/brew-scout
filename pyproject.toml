@@ -23,6 +23,8 @@ aiohttp = {extras = ["speedups"], version = "^3.9.1"}
 tenacity = "^8.2.3"
 sentry-sdk = {extras = ["fastapi"], version = "^1.40.5"}
 redis = "^5.0.2"
+starlette-admin = "^0.13.2"
+sqladmin = "^0.17.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from ...libs.dependencies.services import city_service_factory
 from ...libs.services.city import CityService
-from ...libs.dal.models.cities import CityModel
+from ...libs.dal.models.shops import CityModel
 from ...libs.serializers.cities import CityOut
 
 

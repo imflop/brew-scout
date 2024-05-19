@@ -11,8 +11,10 @@ from starlette.middleware import Middleware
 import sentry_sdk
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sqladmin import Admin, ModelView
 
 from brew_scout import MODULE_NAME, DESCRIPTION, VERSION
+from .dal.models.shops import CoffeeShopModel
 from .settings import AppSettings, SETTINGS_KEY
 from .managers import ManagerProvider, DatabaseSessionManager, RedisSessionManager, ClientSessionManager
 from ..apis.v1.base import router as router_v1
@@ -28,8 +30,21 @@ def setup_app(settings: AppSettings) -> FastAPI:
             client_session_manager=ClientSessionManager(),
         )
         manager_provider.start()
-
         app.state.manager_provider = manager_provider
+
+        admin = Admin(app, manager_provider.database_session_manager.get_engine(), debug=True)
+
+        class CoffeeShopModelAdmin(ModelView, model=CoffeeShopModel):
+            column_list = [CoffeeShopModel.id, CoffeeShopModel.name, CoffeeShopModel.city, CoffeeShopModel.created_at]
+            column_details_list = [CoffeeShopModel.id, CoffeeShopModel.name, "shops.city.name"]
+            form_ajax_refs = {
+                "city": {
+                    "fields": ("id", "name"),
+                    "order_by": "id",
+                }
+            }
+
+        admin.add_view(CoffeeShopModelAdmin)
 
         setup_logging()
 

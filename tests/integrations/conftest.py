@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from brew_scout.libs.settings import AppSettings
 from brew_scout.libs.setup_app import setup_app
 from brew_scout.vars import set_async_session
-from brew_scout.libs.managers import rds_manager
 
 from tests.conftest import AsyncScopedSession
 

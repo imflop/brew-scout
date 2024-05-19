@@ -4,8 +4,7 @@ import typing as t
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dal.models.cities import CityModel
-from ..dal.models.shops import CoffeeShopModel
+from ..dal.models.shops import CoffeeShopModel, CityModel
 from ..dal.models.common import Base as BaseModel
 from ..dal.city import CityRepository, BaseRepository
 from ..dal.shop import CoffeeShopRepository

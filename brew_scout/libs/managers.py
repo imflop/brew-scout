@@ -80,6 +80,12 @@ class DatabaseSessionManager:
                 await connection.rollback()
                 raise
 
+    def get_engine(self) -> AsyncEngine:
+        if not self._engine:
+            raise IOError("DatabaseSessionManager: engine is not initialized")
+
+        return self._engine
+
 
 @dc.dataclass(slots=True)
 class ClientSessionManager:

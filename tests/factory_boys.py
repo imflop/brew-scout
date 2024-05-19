@@ -4,8 +4,7 @@ from random import randint
 import factory as f
 from async_factory_boy.factory.sqlalchemy import AsyncSQLAlchemyFactory
 
-from brew_scout.libs.dal.models.shops import CoffeeShopModel
-from brew_scout.libs.dal.models.cities import CountryModel, CityModel
+from brew_scout.libs.dal.models.shops import CoffeeShopModel, CountryModel, CityModel
 
 from .conftest import AsyncScopedSession
 

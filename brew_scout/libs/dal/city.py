@@ -6,8 +6,8 @@ from sqlalchemy import select, BinaryExpression
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models.cities import CityModel
 from .models.common import Base
+from .models.shops import CityModel
 
 
 CityId: t.TypeAlias = int

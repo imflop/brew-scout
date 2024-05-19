@@ -3,7 +3,7 @@ import logging
 from collections import abc
 
 from ..dal.city import CityRepository
-from ..dal.models.cities import CityModel
+from ..dal.models.shops import CityModel
 
 
 @dc.dataclass(slots=True, repr=False, frozen=True)
