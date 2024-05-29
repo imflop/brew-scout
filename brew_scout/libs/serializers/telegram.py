@@ -9,12 +9,15 @@ class CommonModel(BaseModel):
 
 
 class From(CommonModel):
-    id: int
+    tuid: int
     username: str
     is_bot: bool
     language_code: str
     first_name: str | None
     last_name: str | None
+
+    class Config:
+        fields = {"tuid": "id"}
 
 
 class Chat(CommonModel):

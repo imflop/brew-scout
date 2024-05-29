@@ -39,6 +39,10 @@ async def get_rds_session(
         yield redis_client
 
 
+async def get_oauth_client(manager_provider: ManagerProvider = Depends(manager_provider_factory)) -> t.Any:
+    return manager_provider.oauth_client_manager.get_client()
+
+
 async def background_runner_factory(request: Request, background_tasks: BackgroundTasks) -> BackgroundRunner:
     run_now = bool(request.query_params.get("run_now", False))
 

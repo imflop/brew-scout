@@ -1,7 +1,7 @@
 import pytest
 
 from brew_scout.libs.dal.city import CityRepository
-from brew_scout.libs.dal.models.cities import CityModel
+from brew_scout.libs.dal.models.shops import CityModel
 from brew_scout.libs.domains.cities import City
 
 

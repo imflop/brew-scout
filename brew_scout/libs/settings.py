@@ -1,4 +1,4 @@
-from pydantic import BaseSettings, Field, PostgresDsn, RedisDsn
+from pydantic import BaseSettings, Field, PostgresDsn, RedisDsn, HttpUrl
 
 
 SETTINGS_KEY = "settings"
@@ -18,6 +18,12 @@ class AppSettings(BaseAppSettings):
     telegram_api_url: str = Field(..., env="telegram_api_url")
     telegram_api_token: str = Field(..., env="telegram_api_token")
     sentry_dsn: str | None = Field(None, env="sentry_dsn")
+    oauth_app_name: str = Field(..., env="oauth_app_name")
+    oauth_client_id: str = Field(..., env="oauth_client_id")
+    oauth_client_secret: str = Field(..., env="oauth_client_secret")
+    oauth_server_metadata_url: HttpUrl = Field(..., env="oauth_server_metadata_url")
+    allowed_users: frozenset[str] = Field(..., env="allowed_users")
+    secret_key: str = Field(default="secret", env="secret_key")
 
     class Config:
         validate_assigment = True

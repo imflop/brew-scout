@@ -4,11 +4,12 @@ import typing as t
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dal.models.cities import CityModel
-from ..dal.models.shops import CoffeeShopModel
+from ..dal.models.shops import CoffeeShopModel, CityModel
 from ..dal.models.common import Base as BaseModel
 from ..dal.city import CityRepository, BaseRepository
+from ..dal.models.users import UserModel
 from ..dal.shop import CoffeeShopRepository
+from ..dal.user import UserRepository
 from ..dependencies.common import get_db_session
 
 
@@ -32,3 +33,9 @@ def coffee_shop_repository_factory(
     coffee_shop_repository: CoffeeShopRepository = Depends(get_repository(CoffeeShopModel, CoffeeShopRepository))
 ) -> CoffeeShopRepository:
     return coffee_shop_repository
+
+
+def user_repository_factory(
+    user_repository: UserRepository = Depends(get_repository(UserModel, UserRepository))
+) -> UserRepository:
+    return user_repository

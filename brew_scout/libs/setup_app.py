@@ -8,14 +8,23 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import ORJSONResponse
 from starlette.middleware import Middleware
+from starlette.middleware.sessions import SessionMiddleware
 import sentry_sdk
 from sentry_sdk.integrations.starlette import StarletteIntegration
 from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sqladmin import Admin
 
 from brew_scout import MODULE_NAME, DESCRIPTION, VERSION
+from .admin.views import CoffeeShopModelAdminView, CityModelAdminView, CountryModelAdminView
 from .settings import AppSettings, SETTINGS_KEY
-from .managers import ManagerProvider, DatabaseSessionManager, RedisSessionManager, ClientSessionManager
-from ..apis.v1.base import router as router_v1
+from .managers import (
+    ManagerProvider,
+    DatabaseSessionManager,
+    RedisSessionManager,
+    ClientSessionManager,
+    OAuthClientManager,
+)
+from ..apis.v1.base import router as router_v1, internal_router
 
 
 def setup_app(settings: AppSettings) -> FastAPI:
@@ -26,10 +35,20 @@ def setup_app(settings: AppSettings) -> FastAPI:
             database_session_manager=DatabaseSessionManager(),
             redis_session_manager=RedisSessionManager(),
             client_session_manager=ClientSessionManager(),
+            oauth_client_manager=OAuthClientManager(),
         )
         manager_provider.start()
-
         app.state.manager_provider = manager_provider
+
+        admin = Admin(
+            app=app,
+            engine=manager_provider.database_session_manager.get_engine(),
+            authentication_backend=manager_provider.oauth_client_manager.get_backend(),
+            debug=settings.debug,
+        )
+        admin.add_view(CountryModelAdminView)
+        admin.add_view(CityModelAdminView)
+        admin.add_view(CoffeeShopModelAdminView)
 
         setup_logging()
 
@@ -45,7 +64,11 @@ def setup_app(settings: AppSettings) -> FastAPI:
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
-        )
+        ),
+        Middleware(
+            SessionMiddleware,
+            secret_key=settings.secret_key,
+        ),
     ]
 
     if settings.sentry_dsn:
@@ -68,6 +91,7 @@ def setup_app(settings: AppSettings) -> FastAPI:
         **{SETTINGS_KEY: settings}  # type: ignore
     )
     app.include_router(router_v1)
+    app.include_router(internal_router)
 
     return app
 

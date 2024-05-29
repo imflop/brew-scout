@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from brew_scout.libs.settings import AppSettings
 from brew_scout.libs.setup_app import setup_app
 from brew_scout.vars import set_async_session
-from brew_scout.libs.managers import rds_manager
 
 from tests.conftest import AsyncScopedSession
 
@@ -19,6 +18,11 @@ async def async_app(pg_conf, rds_conf):
         redis_dsn=f"{rds_conf['dsn']}",
         telegram_api_url="https://telegram.org",
         telegram_api_token="token",
+        oauth_app_name="test_app_name",
+        oauth_client_id="test_client_id",
+        oauth_client_secret="test_client_secret",
+        oauth_server_metadata_url="https://test.server.metadata.url",
+        allowed_users=["test_user"]
     )
     app = setup_app(settings)
 

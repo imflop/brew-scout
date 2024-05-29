@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 
 from .city import BaseRepository
 from .models.shops import CoffeeShopModel
-from .models.cities import CityModel
+from .models.shops import CityModel
 
 
 class CoffeeShopRepository(BaseRepository[CoffeeShopModel]):

@@ -5,13 +5,14 @@ from collections import abc
 
 from ..domains.telegram import TelegramMessage
 from ..domains.shops import CoffeeShop
-from ..serializers.telegram import TelegramHookIn, Location
+from ..serializers.telegram import TelegramHookIn, Location, From
 from ..serializers.telegram import Message
 from ..services.bus.service import BusService
 from ..services.geo.service import GeoService
 from ..services.city import CityService
 from ..services.shop import CoffeeShopService
 from ..services.kv import KVService
+from ..services.user import UserService
 
 
 @dc.dataclass(frozen=True, slots=True, repr=False)
@@ -21,11 +22,14 @@ class TelegramHookHandler:
     city_service: CityService
     shop_service: CoffeeShopService
     kv_service: KVService
+    user_service: UserService
 
     default_quantity_for_response: int = 2
     logger: logging.Logger = dc.field(default_factory=lambda: logging.getLogger(__name__))
 
     async def process_hook(self, payload: TelegramHookIn) -> None:
+        await self._process_user(payload.message.message_from)
+
         if self._does_message_start_conversation(payload.message):
             self.logger.info(f"Start message from @{payload.message.chat.username}")
             return await self.bus_service.send_welcome_message(payload.message.chat.id)
@@ -47,6 +51,9 @@ class TelegramHookHandler:
         nearest_coffee_shops = await self._find_nearby_coffee_shops(city.name, location, coffee_shops)
         await self._send_message(payload.message.chat.id, nearest_coffee_shops)
         self.logger.info("Nearest coffee shops sent")
+
+    async def _process_user(self, user: From) -> None:
+        await self.user_service.store_user(user)
 
     @staticmethod
     def _does_message_start_conversation(msg: Message) -> bool:
