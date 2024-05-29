@@ -1,5 +1,4 @@
-import typing as t
-from datetime import datetime
+import datetime as dt
 
 from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -12,12 +11,15 @@ class CountryModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=dt.datetime.utcnow, nullable=False)
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), default=dt.datetime.utcnow, onupdate=dt.datetime.utcnow, nullable=True
     )
 
     cities: Mapped[list["CityModel"]] = relationship(back_populates="country")
+
+    def __repr__(self):
+        return f"{self.name}: {self.id}"
 
 
 class CityModel(Base):
@@ -26,9 +28,9 @@ class CityModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     country_id: Mapped[int] = mapped_column(ForeignKey("countries.id"))
     name: Mapped[str]
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=dt.datetime.utcnow, nullable=False)
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), default=dt.datetime.utcnow, onupdate=dt.datetime.utcnow, nullable=True
     )
     bounding_box_min_latitude: Mapped[float]
     bounding_box_max_latitude: Mapped[float]
@@ -37,6 +39,9 @@ class CityModel(Base):
 
     country: Mapped[CountryModel] = relationship(back_populates="cities")
     shops: Mapped[list["CoffeeShopModel"]] = relationship(back_populates="city")
+
+    def __repr__(self):
+        return f"{self.name}: {self.id}"
 
 
 class CoffeeShopModel(Base):
@@ -48,9 +53,9 @@ class CoffeeShopModel(Base):
     web_url: Mapped[str]
     latitude: Mapped[float]
     longitude: Mapped[float]
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), default=dt.datetime.utcnow, nullable=False)
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), default=dt.datetime.utcnow, onupdate=dt.datetime.utcnow, nullable=True
     )
 
     city: Mapped[CityModel] = relationship(back_populates="shops")

@@ -4,7 +4,14 @@ from redis.asyncio.client import Redis
 
 from .common import get_rds_session
 from .clients import geo_client_factory, telegram_client_factory
-from .repositories import city_repository_factory, coffee_shop_repository_factory
+from .repositories import (
+    city_repository_factory,
+    coffee_shop_repository_factory,
+    user_repository_factory,
+)
+from ..dal.user import UserRepository
+from ..dal.city import CityRepository
+from ..dal.shop import CoffeeShopRepository
 from ..services.geo.client import GeoClient
 from ..services.city import CityService
 from ..services.geo.service import GeoService
@@ -14,8 +21,7 @@ from ..services.bus.service import BusService
 from ..services.bus.client import TelegramClient
 from ..services.runner.retry import RetryService
 from ..services.runner.service import CommonRunnerService
-from ..dal.city import CityRepository
-from ..dal.shop import CoffeeShopRepository
+from ..services.user import UserService
 
 
 def city_service_factory(city_repository: CityRepository = Depends(city_repository_factory)) -> CityService:
@@ -49,3 +55,7 @@ def geo_service_factory(geo_client: GeoClient = Depends(geo_client_factory)) -> 
 
 def kv_service_factory(client: Redis = Depends(get_rds_session)) -> KVService:
     return KVService(client)
+
+
+def user_service_factory(user_repository: UserRepository = Depends(user_repository_factory)) -> UserService:
+    return UserService(user_repository)

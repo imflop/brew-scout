@@ -1,35 +1,16 @@
 import typing as t
-import uuid
+
 from collections import abc
 
-from sqlalchemy import select, BinaryExpression
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models.common import Base
+
+from .models.common import BaseRepository
 from .models.shops import CityModel
 
 
 CityId: t.TypeAlias = int
-ModelIdFilter: t.TypeAlias = int | uuid.UUID
-Model = t.TypeVar("Model", bound=Base)
-
-
-class BaseRepository(t.Generic[Model]):
-    def __init__(self, model: t.Type[Model], session: AsyncSession):
-        self.model = model
-        self.session = session
-
-    async def get(self, id_filter: ModelIdFilter) -> Model | None:
-        return await self.session.get(self.model, id_filter)
-
-    async def filter(self, *expressions: BinaryExpression[t.Any]) -> abc.Sequence[Model]:
-        q = select(self.model)
-
-        if expressions:
-            q = q.where(*expressions)
-
-        return list(await self.session.scalars(q))
 
 
 class CityRepository(BaseRepository[CityModel]):

@@ -9,7 +9,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import context
 
 from brew_scout.libs.dal.models.common import Base
-from brew_scout.libs.dal.models import *
+from brew_scout.libs.dal.models.shops import CountryModel, CityModel, CoffeeShopModel
+from brew_scout.libs.dal.models.users import UserModel
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
