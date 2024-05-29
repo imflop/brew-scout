@@ -123,7 +123,9 @@ class OAuthClientManager:
     _backend: AdminAuthenticationBackend | None = dc.field(default=None)
     _client: t.Any | None = dc.field(default=None)
 
-    def init(self, remote_app_name: str, client_id: str, client_secret: str, server_metadata_url: str, secret_key: str):
+    def init(
+        self, remote_app_name: str, client_id: str, client_secret: str, server_metadata_url: str, secret_key: str
+    ) -> None:
         oauth = OAuth()
         oauth.register(
             name=remote_app_name,

@@ -18,7 +18,7 @@ class CountryModel(Base):
 
     cities: Mapped[list["CityModel"]] = relationship(back_populates="country")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.name}: {self.id}"
 
 
@@ -40,7 +40,7 @@ class CityModel(Base):
     country: Mapped[CountryModel] = relationship(back_populates="cities")
     shops: Mapped[list["CoffeeShopModel"]] = relationship(back_populates="city")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.name}: {self.id}"
 
 

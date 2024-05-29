@@ -1,7 +1,7 @@
 import typing as t
 import uvicorn
 from argparse import ArgumentParser
-from pydantic import PostgresDsn, RedisDsn
+from pydantic import PostgresDsn, RedisDsn, HttpUrl
 
 from .libs.settings import AppSettings
 from .libs.setup_app import setup_app
@@ -46,8 +46,8 @@ def main(
         oauth_app_name=oauth_app_name,
         oauth_client_id=oauth_client_id,
         oauth_client_secret=oauth_client_secret,
-        oauth_server_metadata_url=oauth_server_metadata_url,
-        allowed_users=[user.strip() for user in allowed_users.split(",")],
+        oauth_server_metadata_url=t.cast(HttpUrl, oauth_server_metadata_url),
+        allowed_users=allowed_users,
         secret_key=secret_key,
     )
     app = setup_app(settings)
