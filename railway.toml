@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "pip install --upgrade pip && alembic upgrade head && python -m brew_scout --database_dsn postgresql+asyncpg://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE} --redis_dsn ${REDIS_URL} --sentry_dsn ${SENTRY_DSN} --telegram_api_url ${TELEGRAM_API_URL} --telegram_api_token ${TELEGRAM_API_TOKEN}"
+startCommand = "pip install --upgrade pip && alembic upgrade head && python -m brew_scout --database_dsn postgresql+asyncpg://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE} --redis_dsn ${REDIS_URL} --sentry_dsn ${SENTRY_DSN} --telegram_api_url ${TELEGRAM_API_URL} --telegram_api_token ${TELEGRAM_API_TOKEN} --oauth_app_name ${OAUTH_APP_NAME} --oauth_client_id ${OAUTH_CLIENT_ID} --oauth_client_secret ${OAUTH_CLIENT_SECRET} --oauth_server_metadata_url ${OAUTH_SERVER_METADATA_URL} --allowed_users ${ALLOWED_USERS} --secret_key ${SECRET_KEY}"
 numReplicas = 1
 healthcheckPath = "/api/v1/health"
 healthcheckTimeout = 300
