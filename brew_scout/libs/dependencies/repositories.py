@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..dal.models.shops import CoffeeShopModel, CityModel
 from ..dal.models.common import Base as BaseModel
-from ..dal.city import CityRepository, BaseRepository
+from ..dal.city import BaseRepository  # type: ignore
+from ..dal.city import CityRepository
 from ..dal.models.users import UserModel
 from ..dal.shop import CoffeeShopRepository
 from ..dal.user import UserRepository

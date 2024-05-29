@@ -3,7 +3,7 @@ from collections import abc
 from sqlalchemy import select, LABEL_STYLE_TABLENAME_PLUS_COL
 from sqlalchemy.orm import joinedload
 
-from .city import BaseRepository
+from .city import BaseRepository  # type: ignore
 from .models.shops import CoffeeShopModel
 from .models.shops import CityModel
 
