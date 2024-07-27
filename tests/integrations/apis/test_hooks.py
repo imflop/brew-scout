@@ -72,7 +72,7 @@ async def test_handle_telegram_hook_if_start_message(client, caplog, start_paylo
 
     assert res.status_code == 204
     assert [f'Start message from @{start_payload["message"]["chat"]["username"]}'] == [
-        record.message for record in caplog.records if record.funcName == "process_hook"
+        record.message for record in caplog.records if record.funcName == "_process_message_or_command"
     ]
     mocked.assert_called_once_with(
         TelegramMethods.SEND_MESSAGE,
@@ -92,8 +92,8 @@ async def test_handle_telegram_hook_if_not_start_message(client, caplog, start_p
         res = await client.post("/api/v1/hook/telegram?run_now=1", json=start_payload)
 
     assert res.status_code == 204
-    assert [f'Message is not <START> and without locations {start_payload["message"]["text"]}'] == [
-        record.message for record in caplog.records if record.funcName == "process_hook"
+    assert [f'Received message without command: {start_payload["message"]["text"]}'] == [
+        record.message for record in caplog.records if record.funcName == "_process_message_or_command"
     ]
     mocked.assert_called_once_with(
         TelegramMethods.SEND_MESSAGE,
@@ -144,7 +144,7 @@ async def test_handle_telegram_hook_if_no_coffee_shops_in_city(client, caplog, l
         TelegramMethods.SEND_MESSAGE,
         {
             "chat_id": location_payload["message"]["chat"]["id"],
-            "text": f"Sorry but can't find coffee shops from your city: {tested_city}",
+            "text": f"Sorry but can't find any coffee shops from your city: {tested_city}",
             "parse_mode": "html",
         },
     )

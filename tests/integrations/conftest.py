@@ -1,7 +1,7 @@
 import pytest
 
 from asgi_lifespan import LifespanManager
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from brew_scout.libs.settings import AppSettings

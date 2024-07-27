@@ -1,4 +1,3 @@
-import asyncio
 import dataclasses as dc
 import typing as t
 from asyncio import AbstractEventLoop
@@ -22,8 +21,9 @@ P = t.ParamSpec("P")
 class RedisSessionManager:
     _client: Redis | None = dc.field(default=None)
 
-    def init(self, redis_dsn: str) -> None:
-        self._client = Redis.from_url(redis_dsn, encoding="utf-8", decode_responses=True)
+    @classmethod
+    def init(cls, redis_dsn: str) -> t.Self:
+        return cls(_client=Redis.from_url(redis_dsn, encoding="utf-8", decode_responses=True))
 
     async def close(self) -> None:
         if self._client is None:
@@ -44,9 +44,12 @@ class DatabaseSessionManager:
     _engine: AsyncEngine | None = dc.field(default=None)
     _session_factory: async_sessionmaker[AsyncSession] | None = dc.field(default=None)
 
-    def init(self, database_dsn: str, debug: bool = False) -> None:
-        self._engine = create_async_engine(database_dsn, pool_pre_ping=True, echo=debug)
-        self._session_factory = async_sessionmaker(bind=self._engine, expire_on_commit=False)
+    @classmethod
+    def init(cls, database_dsn: str, debug: bool = False) -> t.Self:
+        engine = create_async_engine(database_dsn, pool_pre_ping=True, echo=debug)
+        session_factory = async_sessionmaker(bind=engine, expire_on_commit=False)
+
+        return cls(_engine=engine, _session_factory=session_factory)
 
     async def close(self) -> None:
         if self._engine is None:
@@ -94,8 +97,9 @@ class ClientSessionManager:
     _session_factory: abc.Callable[..., aiohttp.ClientSession] | None = dc.field(default=None)
     _client_session: aiohttp.ClientSession | None = dc.field(default=None)
 
-    def init(self, loop: AbstractEventLoop) -> None:
-        self._session_factory = partial(self._session_getter, loop=loop)
+    @classmethod
+    def init(cls, loop: AbstractEventLoop) -> t.Self:
+        return cls(_session_factory=partial(cls._session_getter, loop=loop))
 
     def get_session(self, **kwargs: t.Any) -> aiohttp.ClientSession:
         if self._session_factory is None:
@@ -114,7 +118,8 @@ class ClientSessionManager:
         await self._client_session.close()
         self._client_session = None
 
-    def _session_getter(self, loop: AbstractEventLoop, *args: P.args, **kwargs: P.kwargs) -> aiohttp.ClientSession:
+    @staticmethod
+    def _session_getter(loop: AbstractEventLoop, *args: P.args, **kwargs: P.kwargs) -> aiohttp.ClientSession:
         return aiohttp.ClientSession(loop=loop)
 
 
@@ -123,9 +128,10 @@ class OAuthClientManager:
     _backend: AdminAuthenticationBackend | None = dc.field(default=None)
     _client: t.Any | None = dc.field(default=None)
 
+    @classmethod
     def init(
-        self, remote_app_name: str, client_id: str, client_secret: str, server_metadata_url: str, secret_key: str
-    ) -> None:
+        cls, remote_app_name: str, client_id: str, client_secret: str, server_metadata_url: str, secret_key: str
+    ) -> t.Self:
         oauth = OAuth()
         oauth.register(
             name=remote_app_name,
@@ -137,9 +143,9 @@ class OAuthClientManager:
                 "prompt": "select_account",
             },
         )
+        client = oauth.create_client(remote_app_name)
 
-        self._client = oauth.create_client(remote_app_name)
-        self._backend = AdminAuthenticationBackend(secret_key, self._client)
+        return cls(_client=client, _backend=AdminAuthenticationBackend(secret_key, client))
 
     def get_backend(self) -> AdminAuthenticationBackend:
         if self._backend is None:
@@ -168,19 +174,40 @@ class ManagerProvider:
     database_session_manager: DatabaseSessionManager
     redis_session_manager: RedisSessionManager
     oauth_client_manager: OAuthClientManager
-    running_loop: AbstractEventLoop = dc.field(default_factory=lambda: asyncio.get_running_loop())
+
+    @classmethod
+    def init(cls, settings: AppSettings, running_loop: AbstractEventLoop) -> t.Self:
+        database_session_manager = DatabaseSessionManager.init(settings.database_dsn, settings.debug)
+        client_session_manager = ClientSessionManager.init(running_loop)
+        redis_session_manager = RedisSessionManager.init(settings.redis_dsn)
+        oauth_client_manager = OAuthClientManager.init(
+            remote_app_name=settings.oauth_app_name,
+            client_id=settings.oauth_client_id,
+            client_secret=settings.oauth_client_secret,
+            server_metadata_url=settings.oauth_server_metadata_url,
+            secret_key=settings.secret_key,
+        )
+
+        return cls(
+            settings=settings,
+            client_session_manager=client_session_manager,
+            database_session_manager=database_session_manager,
+            redis_session_manager=redis_session_manager,
+            oauth_client_manager=oauth_client_manager,
+        )
 
     def start(self) -> None:
-        self.database_session_manager.init(self.settings.database_dsn, self.settings.debug)
-        self.redis_session_manager.init(self.settings.redis_dsn)
-        self.client_session_manager.init(self.running_loop)
-        self.oauth_client_manager.init(
-            remote_app_name=self.settings.oauth_app_name,
-            client_id=self.settings.oauth_client_id,
-            client_secret=self.settings.oauth_client_secret,
-            server_metadata_url=self.settings.oauth_server_metadata_url,
-            secret_key=self.settings.secret_key,
-        )
+        # self.database_session_manager.init(self.settings.database_dsn, self.settings.debug)
+        # self.redis_session_manager.init(self.settings.redis_dsn)
+        # self.client_session_manager.init(self.running_loop)
+        # self.oauth_client_manager.init(
+        #     remote_app_name=self.settings.oauth_app_name,
+        #     client_id=self.settings.oauth_client_id,
+        #     client_secret=self.settings.oauth_client_secret,
+        #     server_metadata_url=self.settings.oauth_server_metadata_url,
+        #     secret_key=self.settings.secret_key,
+        # )
+        pass
 
     async def stop(self) -> None:
         await self.database_session_manager.close()

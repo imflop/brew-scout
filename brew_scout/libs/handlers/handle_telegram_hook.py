@@ -30,13 +30,12 @@ class TelegramHookHandler:
     async def process_hook(self, payload: TelegramHookIn) -> None:
         await self._process_user(payload.message.message_from)
 
-        if self._does_message_start_conversation(payload.message):
-            self.logger.info(f"Start message from @{payload.message.chat.username}")
-            return await self.bus_service.send_welcome_message(payload.message.chat.id)
+        if await self._process_message_or_command(payload.message):
+            await self.bus_service.send_welcome_message(payload.message.chat.id)
+            return
 
-        if not (location := self._does_message_contain_location(payload.message)):
-            self.logger.info(f"Message is not <START> and without locations {payload.message.text}")
-            return await self.bus_service.send_empty_location_message(payload.message.chat.id)
+        if not (location := await self._process_message_location(payload.message)):
+            return
 
         if not (
             city := await self.city_service.try_to_find_city_from_coordinates(location.latitude, location.longitude)
@@ -55,8 +54,31 @@ class TelegramHookHandler:
     async def _process_user(self, user: From) -> None:
         await self.user_service.store_user(user)
 
+    async def _process_message_or_command(self, message: Message) -> bool:
+        if not message.text:
+            return False
+
+        if not message.text.startswith(TelegramMessage.COMMAND_PREFIX):
+            self.logger.info(f"Received message without command: {message.text}")
+            return False
+
+        match message.text:
+            case TelegramMessage.START:
+                self.logger.info(f"Start message from @{message.chat.username}")
+                return True
+            case _ as unreachable:
+                self.logger.info(f"Received unknown command: {unreachable}")
+                return False
+
+    async def _process_message_location(self, message: Message) -> Location | None:
+        if not message.location:
+            self.logger.info(f"Message is not <COMMAND>: {message.text} and without locations: {message.location}")
+            return await self.bus_service.send_empty_location_message(message.chat.id)
+
+        return message.location
+
     @staticmethod
-    def _does_message_start_conversation(msg: Message) -> bool:
+    def _does_message_contain_start_dialogue_text(msg: Message) -> bool:
         match msg.text:
             case TelegramMessage.START:
                 return True
