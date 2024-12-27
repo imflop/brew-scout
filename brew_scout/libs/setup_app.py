@@ -1,3 +1,4 @@
+import asyncio
 import json
 from collections import abc
 from contextlib import asynccontextmanager
@@ -17,27 +18,17 @@ from sqladmin import Admin
 from brew_scout import MODULE_NAME, DESCRIPTION, VERSION
 from .admin.views import CoffeeShopModelAdminView, CityModelAdminView, CountryModelAdminView
 from .settings import AppSettings, SETTINGS_KEY
-from .managers import (
-    ManagerProvider,
-    DatabaseSessionManager,
-    RedisSessionManager,
-    ClientSessionManager,
-    OAuthClientManager,
-)
+from .managers import ManagerProvider
 from ..apis.v1.base import router as router_v1, internal_router
 
 
 def setup_app(settings: AppSettings) -> FastAPI:
     @asynccontextmanager
     async def app_lifespan(app: FastAPI) -> abc.AsyncIterator[None]:
-        manager_provider = ManagerProvider(
-            settings=settings,
-            database_session_manager=DatabaseSessionManager(),
-            redis_session_manager=RedisSessionManager(),
-            client_session_manager=ClientSessionManager(),
-            oauth_client_manager=OAuthClientManager(),
-        )
+        current_loop = asyncio.get_running_loop()
+        manager_provider = ManagerProvider.init(settings, current_loop)
         manager_provider.start()
+
         app.state.manager_provider = manager_provider
 
         admin = Admin(

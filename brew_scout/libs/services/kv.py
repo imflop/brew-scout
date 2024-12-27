@@ -10,10 +10,12 @@ from ..domains.shops import CoffeeShop
 @dc.dataclass(slots=True, repr=True, frozen=True)
 class KVService:
     client: Redis
-    locations_key = "shops:{}:locations"
+    locations_key = "shops:{city}:{user}:locations"
 
-    async def get_coffee_shops(self, city_name: str) -> abc.Sequence[CoffeeShop]:
-        cursor, result = await self.client.zscan(name=self.locations_key.format(city_name.lower()))
+    async def get_coffee_shops(self, city_name: str, user_name: str) -> abc.Sequence[CoffeeShop]:
+        cursor, result = await self.client.zscan(
+            name=self.locations_key.format(city=city_name.lower(), user=user_name.lower())
+        )
 
         if not result:
             return []
@@ -23,9 +25,9 @@ class KVService:
         return [CoffeeShop(**data) for data in parsed_result]
 
     async def set_coffee_shops(
-        self, city_name: str, coffee_shops: abc.Sequence[CoffeeShop], expiration_time: int = 600
+        self, city_name: str, user_name: str, coffee_shops: abc.Sequence[CoffeeShop], expiration_time: int = 600
     ) -> None:
-        key = self.locations_key.format(city_name.lower())
+        key = self.locations_key.format(city=city_name.lower(), user=user_name.lower())
 
         for cs in coffee_shops:
             await self.client.geoadd(
@@ -36,11 +38,11 @@ class KVService:
         await self.client.expire(name=key, time=expiration_time)
 
     async def get_nearest_coffee_shops(
-        self, city_name: str, source_latitude: float, source_longitude: float, radius: int = 1000
+        self, city_name: str, user_name: str, source_latitude: float, source_longitude: float, radius: int = 1000
     ) -> abc.Sequence[CoffeeShop]:
         if not (
             geosearch_result := await self.client.geosearch(
-                name=self.locations_key.format(city_name.lower()),
+                name=self.locations_key.format(city=city_name.lower(), user=user_name.lower()),
                 latitude=source_latitude,
                 longitude=source_longitude,
                 radius=radius,

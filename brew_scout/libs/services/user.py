@@ -13,5 +13,5 @@ class UserService:
     async def get_users(self) -> abc.Sequence[UserModel]:
         return await self.repository.get_all()
 
-    async def store_user(self, user: From) -> None:
-        await self.repository.upsert_user(user)
+    async def store_user(self, user: From) -> UserModel:
+        return await self.repository.upsert_user(user)

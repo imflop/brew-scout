@@ -7,4 +7,5 @@ class TelegramMethods(StrEnum):
 
 
 class TelegramMessage(StrEnum):
+    COMMAND_PREFIX = "/"
     START = "/start"
