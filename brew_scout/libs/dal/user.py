@@ -15,7 +15,7 @@ class UserRepository(BaseRepository[UserModel]):
 
         return result.all()
 
-    async def upsert_user(self, user: From) -> None:
+    async def upsert_user(self, user: From) -> UserModel:
         ins_stmt = insert(UserModel).values(
             tuid=user.tuid,
             username=user.username,
@@ -33,6 +33,8 @@ class UserRepository(BaseRepository[UserModel]):
                 created_at=ins_stmt.excluded.created_at,
                 updated_at=dt.datetime.now(tz=dt.timezone.utc),
             ),
-        )
+        ).returning(UserModel)
 
-        await self.session.execute(ups_stmt)
+        result = await self.session.scalars(ups_stmt)
+
+        return result.one()

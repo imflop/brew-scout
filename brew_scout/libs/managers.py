@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses as dc
 import typing as t
 from asyncio import AbstractEventLoop
@@ -71,6 +72,8 @@ class DatabaseSessionManager:
         except Exception:
             await session.rollback()
             raise
+        finally:
+            await session.close()
 
     @asynccontextmanager
     async def connection(self) -> abc.AsyncIterator[AsyncConnection]:
@@ -84,6 +87,8 @@ class DatabaseSessionManager:
             except Exception:
                 await connection.rollback()
                 raise
+            finally:
+                await connection.close()
 
     def get_engine(self) -> AsyncEngine:
         if not self._engine:
@@ -197,16 +202,6 @@ class ManagerProvider:
         )
 
     def start(self) -> None:
-        # self.database_session_manager.init(self.settings.database_dsn, self.settings.debug)
-        # self.redis_session_manager.init(self.settings.redis_dsn)
-        # self.client_session_manager.init(self.running_loop)
-        # self.oauth_client_manager.init(
-        #     remote_app_name=self.settings.oauth_app_name,
-        #     client_id=self.settings.oauth_client_id,
-        #     client_secret=self.settings.oauth_client_secret,
-        #     server_metadata_url=self.settings.oauth_server_metadata_url,
-        #     secret_key=self.settings.secret_key,
-        # )
         pass
 
     async def stop(self) -> None:

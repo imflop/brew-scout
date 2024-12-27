@@ -25,7 +25,8 @@ from ..apis.v1.base import router as router_v1, internal_router
 def setup_app(settings: AppSettings) -> FastAPI:
     @asynccontextmanager
     async def app_lifespan(app: FastAPI) -> abc.AsyncIterator[None]:
-        manager_provider = ManagerProvider.init(settings, asyncio.get_running_loop())
+        current_loop = asyncio.get_running_loop()
+        manager_provider = ManagerProvider.init(settings, current_loop)
         manager_provider.start()
 
         app.state.manager_provider = manager_provider

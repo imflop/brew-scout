@@ -10,7 +10,7 @@ import yarl
 from aiohttp.typedefs import StrOrURL
 
 from brew_scout import MODULE_NAME, VERSION
-from brew_scout.libs.managers import ClientSessionManager
+from ...managers import ClientSessionManager
 
 
 @dc.dataclass(frozen=True, slots=True, repr=False)

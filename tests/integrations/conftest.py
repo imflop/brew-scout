@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from asgi_lifespan import LifespanManager
@@ -8,7 +10,7 @@ from brew_scout.libs.settings import AppSettings
 from brew_scout.libs.setup_app import setup_app
 from brew_scout.vars import set_async_session
 
-from tests.conftest import AsyncScopedSession
+from ..conftest import AsyncScopedSession
 
 
 @pytest.fixture()
@@ -45,7 +47,7 @@ async def configure_session(pg_conf, create_db):
 
 
 @pytest.fixture()
-def app(async_app, configure_session):
+async def app(async_app, configure_session):
     set_async_session(AsyncScopedSession)
     return async_app
 

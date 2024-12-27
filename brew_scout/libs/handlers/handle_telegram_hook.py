@@ -3,6 +3,7 @@ import dataclasses as dc
 import logging
 from collections import abc
 
+from ..dal.models.users import UserModel
 from ..domains.telegram import TelegramMessage
 from ..domains.shops import CoffeeShop
 from ..serializers.telegram import TelegramHookIn, Location, From
@@ -28,13 +29,14 @@ class TelegramHookHandler:
     logger: logging.Logger = dc.field(default_factory=lambda: logging.getLogger(__name__))
 
     async def process_hook(self, payload: TelegramHookIn) -> None:
-        await self._process_user(payload.message.message_from)
+        user = await self._process_user(payload.message.message_from)
 
         if await self._process_message_or_command(payload.message):
             await self.bus_service.send_welcome_message(payload.message.chat.id)
             return
 
         if not (location := await self._process_message_location(payload.message)):
+            await self.bus_service.send_empty_location_message(payload.message.chat.id)
             return
 
         if not (
@@ -43,16 +45,16 @@ class TelegramHookHandler:
             self.logger.info(f"City not found with given coordinates: {location.latitude} {location.longitude}")
             return await self.bus_service.send_city_not_found_message(payload.message.chat.id)
 
-        if not (coffee_shops := await self._get_coffee_shops_for_city(city.name)):
+        if not (coffee_shops := await self._get_coffee_shops_for_city(city.name, user.username)):
             self.logger.info(f"There are no coffee shops in city: {city.name}")
             return await self.bus_service.send_shops_not_found_message(payload.message.chat.id, city.name)
 
-        nearest_coffee_shops = await self._find_nearby_coffee_shops(city.name, location, coffee_shops)
+        nearest_coffee_shops = await self._find_nearby_coffee_shops(city.name, user.username, location, coffee_shops)
         await self._send_message(payload.message.chat.id, nearest_coffee_shops)
         self.logger.info("Nearest coffee shops sent")
 
-    async def _process_user(self, user: From) -> None:
-        await self.user_service.store_user(user)
+    async def _process_user(self, user: From) -> UserModel:
+        return await self.user_service.store_user(user)
 
     async def _process_message_or_command(self, message: Message) -> bool:
         if not message.text:
@@ -73,44 +75,39 @@ class TelegramHookHandler:
     async def _process_message_location(self, message: Message) -> Location | None:
         if not message.location:
             self.logger.info(f"Message is not <COMMAND>: {message.text} and without locations: {message.location}")
-            return await self.bus_service.send_empty_location_message(message.chat.id)
+            return None
 
         return message.location
 
-    @staticmethod
-    def _does_message_contain_start_dialogue_text(msg: Message) -> bool:
-        match msg.text:
-            case TelegramMessage.START:
-                return True
-            case _:
-                return False
-
-    @staticmethod
-    def _does_message_contain_location(msg: Message) -> Location | None:
-        return msg.location or None
-
-    async def _get_coffee_shops_for_city(self, city_name: str) -> abc.Sequence[CoffeeShop]:
-        if coffee_shops_from_rds := await self.kv_service.get_coffee_shops(city_name):
-            self.logger.info(f"Return coffee shops from cache for {city_name}", extra={"city": city_name})
+    async def _get_coffee_shops_for_city(self, city_name: str, user_name: str) -> abc.Sequence[CoffeeShop]:
+        if coffee_shops_from_rds := await self.kv_service.get_coffee_shops(city_name, user_name):
+            self.logger.info(
+                f"Return coffee shops from cache for {user_name} in {city_name}",
+                extra={"city": city_name},
+            )
             return coffee_shops_from_rds
 
         if coffee_shops_from_db := await self.shop_service.get_coffee_shops_for_city(city_name):
             self.logger.info(f"Return coffee shops from db for {city_name}", extra={"city": city_name})
-            await self.kv_service.set_coffee_shops(city_name, coffee_shops_from_db)
+            await self.kv_service.set_coffee_shops(city_name, user_name, coffee_shops_from_db)
 
             return coffee_shops_from_db
 
         return []
 
     async def _find_nearby_coffee_shops(
-        self, city_name: str, location: Location, coffee_shops: abc.Sequence[CoffeeShop]
+        self, city_name: str, user_name: str, location: Location, coffee_shops: abc.Sequence[CoffeeShop]
     ) -> abc.Sequence[CoffeeShop]:
         if nearest_coffee_shops_from_rds := await self.kv_service.get_nearest_coffee_shops(
             city_name=city_name,
+            user_name=user_name,
             source_latitude=location.latitude,
             source_longitude=location.longitude,
         ):
-            self.logger.info(f"Returning nearby coffee shops from cache for {city_name}", extra={"city": city_name})
+            self.logger.info(
+                f"Returning nearby coffee shops from cache for {user_name} in {city_name}",
+                extra={"city": city_name},
+            )
             return nearest_coffee_shops_from_rds[: self.default_quantity_for_response]
 
         if nearest_coffee_shops_from_db := await self.geo_service.find_nearest_coffee_shops(
