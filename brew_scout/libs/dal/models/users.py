@@ -1,4 +1,5 @@
 import datetime as dt
+import typing as t
 from uuid import UUID
 
 from sqlalchemy import DateTime, UniqueConstraint, Uuid, text

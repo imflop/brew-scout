@@ -4,28 +4,7 @@ from ..utils.orj import orjson_dumps
 
 
 class CommonModel(BaseModel):
-    class Config:
-        json_dumps = orjson_dumps
-
-
-class From(CommonModel):
-    tuid: int
-    username: str
-    is_bot: bool
-    language_code: str
-    first_name: str | None
-    last_name: str | None
-
-    class Config:
-        fields = {"tuid": "id"}
-
-
-class Chat(CommonModel):
-    id: int
-    username: str
-    type: str
-    first_name: str | None
-    last_name: str | None
+    ...
 
 
 class Location(CommonModel):
@@ -33,16 +12,30 @@ class Location(CommonModel):
     longitude: float
 
 
+class Chat(CommonModel):
+    id: int
+    first_name: str | None
+    last_name: str | None
+    username: str
+    type: str
+
+
+class From(CommonModel):
+    tuid: int = Field(alias="id")
+    is_bot: bool
+    first_name: str | None
+    last_name: str | None
+    username: str
+    language_code: str
+
+
 class Message(CommonModel):
     message_id: int
-    message_from: From
+    message_from: From = Field(alias="from")
     chat: Chat
     date: int
     text: str | None
-    location: Location | None
-
-    class Config:
-        fields = {"message_from": "from"}
+    location: Location | None = Field(default=None)
 
 
 class TelegramHookIn(CommonModel):

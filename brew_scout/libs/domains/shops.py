@@ -1,16 +1,10 @@
-from pydantic import BaseModel, AnyHttpUrl
+from pydantic import BaseModel, AnyHttpUrl, ConfigDict, Field
 
-from ..utils.orj import orjson_dumps
+class CoffeeShop(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-
-class CommonModel(BaseModel):
-    class Config:
-        json_dumps = orjson_dumps
-
-
-class CoffeeShop(CommonModel):
     name: str
     latitude: float
     longitude: float
     web_url: AnyHttpUrl
-    distance: float | None
+    distance: float | None = Field(default=None)

@@ -3,7 +3,7 @@ from collections import abc
 from sqlalchemy import select, LABEL_STYLE_TABLENAME_PLUS_COL
 from sqlalchemy.orm import joinedload
 
-from .city import BaseRepository  # type: ignore
+from .common import BaseRepository
 from .models.shops import CoffeeShopModel
 from .models.shops import CityModel
 
@@ -16,9 +16,10 @@ class CoffeeShopRepository(BaseRepository[CoffeeShopModel]):
             .set_label_style(LABEL_STYLE_TABLENAME_PLUS_COL)
         )
 
-        result = await self.session.scalars(q)
+        async with self._get_session() as session:
+            result = await session.scalars(q)
 
-        return result.all()
+            return result.all()
 
     async def get_by_city_name(self, city_name: str) -> abc.Sequence[CoffeeShopModel]:
         q = (
@@ -28,6 +29,7 @@ class CoffeeShopRepository(BaseRepository[CoffeeShopModel]):
             .where(CityModel.name.ilike(city_name))
         )
 
-        result = await self.session.scalars(q)
+        async with self._get_session() as session:
+            result = await session.scalars(q)
 
-        return result.all()
+            return result.all()

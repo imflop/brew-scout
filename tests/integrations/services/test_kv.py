@@ -20,8 +20,9 @@ async def test_get_coffee_shops_key_exist(service: KVService):
     shops = CoffeeShopFactory.build_batch(3, city=city)
 
     await service.set_coffee_shops(city.name, user.username, shops)
+    result = await service.get_coffee_shops(city.name, user.username)
 
-    assert {shop.name for shop in shops} == {r.name for r in await service.get_coffee_shops(city.name, user.username)}
+    assert {shop.name for shop in shops} == {r.name for r in result}
 
 
 async def test_get_nearest_coffee_shops_if_key_not_exist(service: KVService, faker):

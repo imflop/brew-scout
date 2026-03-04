@@ -9,7 +9,7 @@ from starlette.background import BackgroundTasks
 from starlette.requests import Request
 
 from ..settings import AppSettings, SETTINGS_KEY
-from ..managers import ManagerProvider
+from ..managers import ResourceProvider
 
 
 T = t.TypeVar("T")
@@ -17,30 +17,27 @@ P = t.ParamSpec("P")
 BackgroundRunner = abc.Callable[..., abc.Awaitable[None]]
 
 
-def settings_factory(request: Request) -> AppSettings:
+async def settings_factory(request: Request) -> AppSettings:
     return request.app.extra[SETTINGS_KEY]
 
 
-def manager_provider_factory(request: Request) -> ManagerProvider:
+async def resource_provider_factory(request: Request) -> ResourceProvider:
     return request.app.state.manager_provider
 
 
 async def get_db_session(
-    manager_provider: ManagerProvider = Depends(manager_provider_factory),
+    rp: ResourceProvider = Depends(resource_provider_factory),
 ) -> t.AsyncGenerator[AsyncSession, None]:
-    async with manager_provider.database_session_manager.session() as session:
+    async with rp.database_session_manager.session() as session:
         yield session
 
 
-async def get_rds_session(
-    manager_provider: ManagerProvider = Depends(manager_provider_factory),
-) -> abc.AsyncGenerator[Redis, None]:
-    async with manager_provider.redis_session_manager.session() as redis_client:
-        yield redis_client
+async def get_rds_session(rp: ResourceProvider = Depends(resource_provider_factory)) ->Redis:
+    return rp.redis_session_manager.get_client()
 
 
-async def get_oauth_client(manager_provider: ManagerProvider = Depends(manager_provider_factory)) -> t.Any:
-    return manager_provider.oauth_client_manager.get_client()
+async def get_oauth_client(rp: ResourceProvider = Depends(resource_provider_factory)) -> t.Any:
+    return rp.oauth_client_manager.get_client()
 
 
 async def background_runner_factory(request: Request, background_tasks: BackgroundTasks) -> BackgroundRunner:
@@ -49,10 +46,9 @@ async def background_runner_factory(request: Request, background_tasks: Backgrou
     async def background_runner(func: abc.Callable[P, abc.Awaitable[T]], *args: P.args, **kwargs: P.kwargs) -> None:
         if run_now:
             await func(*args, **kwargs)
-            return
+            return None
 
         # Run the function in the background
-        background_tasks.add_task(func, *args, **kwargs)
-        return
+        return background_tasks.add_task(func, *args, **kwargs)
 
     return background_runner

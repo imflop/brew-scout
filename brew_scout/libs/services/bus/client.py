@@ -7,16 +7,16 @@ from http import HTTPMethod
 
 import aiohttp
 import yarl
+from aiohttp import ClientSession
 from aiohttp.typedefs import StrOrURL
 
 from brew_scout import MODULE_NAME, VERSION
-from ...managers import ClientSessionManager
 
 
 @dc.dataclass(frozen=True, slots=True, repr=False)
 class TelegramClient:
     api_url: str
-    client_session_manager: ClientSessionManager
+    client_session_getter: abc.Callable[..., abc.Awaitable[ClientSession]]
     _session: aiohttp.ClientSession = dc.field(init=False)
 
     default_timeout: float = 35.0
@@ -25,7 +25,7 @@ class TelegramClient:
         object.__setattr__(
             self,
             "_session",
-            self.client_session_manager.get_session(
+            self.client_session_getter(
                 timeout=aiohttp.ClientTimeout(total=self.default_timeout),
                 headers=self._get_headers(),
                 trust_env=False,

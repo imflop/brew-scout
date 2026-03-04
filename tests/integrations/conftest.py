@@ -67,5 +67,4 @@ def db_session(app):
 async def rds_session(app):
     mp = app.state.manager_provider
 
-    async with mp.redis_session_manager.session() as redis_client:
-        yield redis_client
+    return mp.redis_session_manager.get_client()
