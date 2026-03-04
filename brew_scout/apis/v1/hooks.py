@@ -15,4 +15,4 @@ async def handle_hook(
     bg_runner: BackgroundRunner = Depends(background_runner_factory),
     handler: TelegramHookHandler = Depends(telegram_hook_handler_factory),
 ) -> None:
-    await bg_runner(handler.process_hook, payload=hook_in)
+    return await bg_runner(handler.process_hook, payload=hook_in)

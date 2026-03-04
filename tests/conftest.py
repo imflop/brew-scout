@@ -78,7 +78,7 @@ class RedisContainer(BaseContainer):
 
     @staticmethod
     def get_name() -> str:
-        return f"redis-test-{uuid.uuid4().hex}"
+            return f"redis-test-{uuid.uuid4().hex}"
 
     @staticmethod
     def get_image() -> str:

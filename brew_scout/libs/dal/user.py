@@ -4,16 +4,17 @@ from collections import abc
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from .models.common import BaseRepository
+from .common import BaseRepository
 from .models.users import UserModel
 from ..serializers.telegram import From
 
 
 class UserRepository(BaseRepository[UserModel]):
     async def get_all(self) -> abc.Sequence[UserModel]:
-        result = await self.session.scalars(select(UserModel))
+        async with self._get_session() as session:
+            result = await session.scalars(select(UserModel))
 
-        return result.all()
+            return result.all()
 
     async def upsert_user(self, user: From) -> UserModel:
         ins_stmt = insert(UserModel).values(
@@ -35,6 +36,7 @@ class UserRepository(BaseRepository[UserModel]):
             ),
         ).returning(UserModel)
 
-        result = await self.session.scalars(ups_stmt)
+        async with self._get_session() as session:
+            result = await session.scalars(ups_stmt)
 
-        return result.one()
+            return result.one()

@@ -1,18 +1,12 @@
-from pydantic import BaseModel
+from .common import CommonOut
 
 
-class CountryOut(BaseModel):
+class CountryOut(CommonOut):
     id: int
     name: str
 
-    class Config:
-        orm_mode = True
 
-
-class CityOut(BaseModel):
+class CityOut(CommonOut):
     id: int
     name: str
     country: CountryOut
-
-    class Config:
-        orm_mode = True

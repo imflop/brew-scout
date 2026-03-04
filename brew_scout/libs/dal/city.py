@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 
-from .models.common import BaseRepository
+from .common import BaseRepository
 from .models.shops import CityModel
 
 
@@ -17,9 +17,10 @@ class CityRepository(BaseRepository[CityModel]):
     async def get_all(self) -> abc.Sequence[CityModel]:
         q = select(CityModel).options(joinedload(CityModel.country))
 
-        result = await self.session.scalars(q)
+        async with self._get_session() as session:
+            result = await session.scalars(q)
 
-        return result.all()
+            return result.all()
 
     async def get_city_by_coordinates(self, latitude: float, longitude: float) -> CityModel | None:
         q = (
@@ -34,6 +35,7 @@ class CityRepository(BaseRepository[CityModel]):
             )
         )
 
-        result = await self.session.scalars(q)
+        async with self._get_session() as session:
+            result = await session.scalars(q)
 
-        return result.one_or_none()
+            return result.one_or_none()

@@ -1,15 +1,13 @@
-from pydantic import BaseModel, AnyHttpUrl
+from pydantic import AnyHttpUrl
 
 from .cities import CityOut
+from .common import CommonOut
 
 
-class CoffeeShopsOut(BaseModel):
+class CoffeeShopsOut(CommonOut):
     id: int
     name: str
     latitude: float
     longitude: float
     web_url: AnyHttpUrl
     city: CityOut
-
-    class Config:
-        orm_mode = True

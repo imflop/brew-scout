@@ -22,7 +22,7 @@ class KVService:
 
         parsed_result = self._parse_zscan_result(result)
 
-        return [CoffeeShop(**data) for data in parsed_result]
+        return [CoffeeShop.model_validate(data) for data in parsed_result]
 
     async def set_coffee_shops(
         self, city_name: str, user_name: str, coffee_shops: abc.Sequence[CoffeeShop], expiration_time: int = 600
@@ -36,6 +36,8 @@ class KVService:
             )
 
         await self.client.expire(name=key, time=expiration_time)
+
+        return
 
     async def get_nearest_coffee_shops(
         self, city_name: str, user_name: str, source_latitude: float, source_longitude: float, radius: int = 1000

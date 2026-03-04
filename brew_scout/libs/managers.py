@@ -1,4 +1,3 @@
-import asyncio
 import dataclasses as dc
 import typing as t
 from asyncio import AbstractEventLoop
@@ -12,7 +11,26 @@ from redis.asyncio.client import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, AsyncConnection, async_sessionmaker, create_async_engine
 
 from brew_scout.libs.admin.backends import AdminAuthenticationBackend
+from brew_scout.libs.handlers.handle_telegram_hook import TelegramHookHandler
+from brew_scout.libs.services.bus.client import TelegramClient
+from brew_scout.libs.services.bus.service import BusService
+from brew_scout.libs.services.city import CityService
+from brew_scout.libs.services.geo.client import GeoClient
+from brew_scout.libs.services.geo.service import GeoService
+from brew_scout.libs.services.kv import KVService
+from brew_scout.libs.services.runner.retry import RetryService
+from brew_scout.libs.services.runner.service import CommonRunnerService
+from brew_scout.libs.services.shop import CoffeeShopService
+from brew_scout.libs.services.user import UserService
 from brew_scout.libs.settings import AppSettings
+
+
+from brew_scout.libs.dal.city import CityRepository
+from brew_scout.libs.dal.user import UserRepository
+from brew_scout.libs.dal.models.shops import CityModel, CoffeeShopModel
+from brew_scout.libs.dal.models.users import UserModel
+from brew_scout.libs.dal.shop import CoffeeShopRepository
+
 
 
 P = t.ParamSpec("P")
@@ -31,13 +49,15 @@ class RedisSessionManager:
             return
 
         await self._client.aclose()
+        self._client = None
 
-    @asynccontextmanager
-    async def session(self) -> abc.AsyncIterator[Redis]:
+        return
+
+    def get_client(self) -> Redis:
         if self._client is None:
             raise IOError("Redis client is not initialized")
 
-        yield self._client
+        return self._client
 
 
 @dc.dataclass(slots=True)
@@ -59,6 +79,8 @@ class DatabaseSessionManager:
         await self._engine.dispose()
         self._engine = None
         self._session_factory = None
+
+        return
 
     @asynccontextmanager
     async def session(self) -> abc.AsyncIterator[AsyncSession]:
@@ -123,6 +145,8 @@ class ClientSessionManager:
         await self._client_session.close()
         self._client_session = None
 
+        return
+
     @staticmethod
     def _session_getter(loop: AbstractEventLoop, *args: P.args, **kwargs: P.kwargs) -> aiohttp.ClientSession:
         return aiohttp.ClientSession(loop=loop)
@@ -171,26 +195,60 @@ class OAuthClientManager:
         self._client = None
         self._backend = None
 
+        return
+
 
 @dc.dataclass(frozen=True, slots=True, repr=False)
-class ManagerProvider:
+class ResourceProvider:
     settings: AppSettings
     client_session_manager: ClientSessionManager
     database_session_manager: DatabaseSessionManager
     redis_session_manager: RedisSessionManager
     oauth_client_manager: OAuthClientManager
+    coffee_shop_service: CoffeeShopService
+    telegram_hook_handler: TelegramHookHandler
 
     @classmethod
     def init(cls, settings: AppSettings, running_loop: AbstractEventLoop) -> t.Self:
-        database_session_manager = DatabaseSessionManager.init(settings.database_dsn, settings.debug)
+        database_session_manager = DatabaseSessionManager.init(str(settings.database_dsn), settings.debug)
         client_session_manager = ClientSessionManager.init(running_loop)
-        redis_session_manager = RedisSessionManager.init(settings.redis_dsn)
+        redis_session_manager = RedisSessionManager.init(str(settings.redis_dsn))
         oauth_client_manager = OAuthClientManager.init(
             remote_app_name=settings.oauth_app_name,
             client_id=settings.oauth_client_id,
             client_secret=settings.oauth_client_secret,
-            server_metadata_url=settings.oauth_server_metadata_url,
+            server_metadata_url=str(settings.oauth_server_metadata_url),
             secret_key=settings.secret_key,
+        )
+
+        telegram_client = TelegramClient(
+            api_url=f"{settings.telegram_api_url}/{settings.telegram_api_token}",
+            client_session_getter=partial(client_session_manager.get_session),
+        )
+        geo_client = GeoClient()
+
+        common_runner_service = CommonRunnerService(retry_service=RetryService())
+
+        bus_service = BusService(
+            telegram_client=telegram_client,
+            runner_service=common_runner_service,
+        )
+        city_service = CityService(
+            city_repository=CityRepository(model=CityModel, session_manager=database_session_manager),
+        )
+        shop_service = CoffeeShopService(
+            repository=CoffeeShopRepository(model=CoffeeShopModel, session_manager=database_session_manager)
+        )
+        kv_service = KVService(client=redis_session_manager.get_client())
+        user_service = UserService(repository=UserRepository(model=UserModel, session_manager=database_session_manager))
+
+        telegram_hook_handler = TelegramHookHandler(
+            bus_service=bus_service,
+            geo_service=GeoService(client=geo_client),
+            city_service=city_service,
+            shop_service=shop_service,
+            kv_service=kv_service,
+            user_service=user_service,
         )
 
         return cls(
@@ -199,6 +257,8 @@ class ManagerProvider:
             database_session_manager=database_session_manager,
             redis_session_manager=redis_session_manager,
             oauth_client_manager=oauth_client_manager,
+            coffee_shop_service=shop_service,
+            telegram_hook_handler=telegram_hook_handler,
         )
 
     def start(self) -> None:
